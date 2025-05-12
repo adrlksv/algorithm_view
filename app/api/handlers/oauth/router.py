@@ -46,8 +46,8 @@ async def github_callback(request: Request, response: Response):
         )
         existing_user = await UsersRepository.find_one_or_none(email=email)
 
-    access_token = create_access_token({"sub": str(existing_user.id)})
-    refresh_token = create_refresh_token({"sub": str(existing_user.id)})
+    access_token = create_access_token({"sub": str(existing_user.user_id)})
+    refresh_token = create_refresh_token({"sub": str(existing_user.user_id)})
 
     response.set_cookie(
         key="refer_access_token",
@@ -71,7 +71,7 @@ async def github_callback(request: Request, response: Response):
         "access_token": access_token,
         "refresh_token": refresh_token,
         "user": {
-            "id": existing_user.id,
+            "id": existing_user.user_id,
             "email": existing_user.email,
             "login": existing_user.login
         }

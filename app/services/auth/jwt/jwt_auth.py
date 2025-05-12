@@ -5,7 +5,9 @@ from passlib.context import CryptContext
 from pydantic import EmailStr
 
 from config import settings
-from src.users.dao import UserDAO
+from repository.users.user_repository import UsersRepository
+
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -41,8 +43,8 @@ def create_refresh_token(data: dict) -> str:
     return encoded_jwt
 
 
-async def authenticate_user(email: EmailStr, password: str):
-    user = await UserDAO.find_one_or_none(email=email)
+async def authenticate_user(email: EmailStr, password: str, session: AsyncSession):
+    user = await UsersRepository.find_one_or_none(email=email, session=session)
     if not user:
         return None
     if not verify_password(password, user.hashed_password):
@@ -51,7 +53,7 @@ async def authenticate_user(email: EmailStr, password: str):
 
 
 async def create_tokens(user):
-    user_data = {"sub": str(user.id)}
+    user_data = {"sub": str(user.user_id)}
     access_token = create_access_token(user_data)
     refresh_token = create_refresh_token(user_data)
     return access_token, refresh_token

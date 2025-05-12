@@ -3,7 +3,7 @@ from sqlalchemy.orm import DeclarativeBase
 
 from typing import AsyncIterator
 
-from config import settings
+from app.config import settings
 
 
 DATABASE_URL = settings.DATABASE_URL

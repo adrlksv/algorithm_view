@@ -12,6 +12,9 @@ RUN apt update -y && \
 
 ADD pyproject.toml /app
 
+COPY alembic.ini /app/
+COPY migrations /app/
+
 RUN pip install --upgrade pip
 RUN pip install poetry
 

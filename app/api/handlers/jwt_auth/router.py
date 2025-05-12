@@ -34,24 +34,22 @@ async def register_user(user_data: SUserCreate, db: AsyncSession = Depends(get_d
         session=db,
         email=user_data.email,
         username=user_data.username,
-        first_name=user_data.first_name,
-        last_name=user_data.last_name,
         hashed_password=hashed_password
     )
 
 
 @router.post("/login")
-async def login_user(response: Response, user_data: SUserLogin, db: AsyncSession = Depends(get_db)):
+async def login_user(response: Response, user_data: SUserLogin, session: AsyncSession = Depends(get_db)):
     user = await authenticate_user(
-        session=db,
+        session=session,
         email=user_data.email, 
         password=user_data.password
     )
     if not user:
         raise IncorrectEmailOrPasswordException
     
-    access_token = create_access_token({"sub": str(user.id)})
-    refresh_token = create_refresh_token({"sub": str(user.id)})
+    access_token = create_access_token({"sub": str(user.user_id)})
+    refresh_token = create_refresh_token({"sub": str(user.user_id)})
 
     response.set_cookie(
         "refer_access_token",
@@ -76,14 +74,15 @@ async def login_user(response: Response, user_data: SUserLogin, db: AsyncSession
 async def refresh_token(
     request: Request, 
     response: Response, 
-    db: AsyncSession = Depends(get_db)
+    session: AsyncSession = Depends(get_db)
 ):
     refresh_token = request.cookies.get("refer_refresh_token")
     if not refresh_token:
         raise TokenAbsentException
     
-    user = await get_current_user(refresh_token)
-    new_access_token = create_access_token({"sub": str(user.id)})
+    user = await get_current_user(session=session,
+                                  token=refresh_token)
+    new_access_token = create_access_token({"sub": str(user.user_id)})
 
     response.set_cookie(
         "refer_access_token",
