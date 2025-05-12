@@ -1,6 +1,7 @@
-from fastapi import APIRouter, Request, Response
+from fastapi import APIRouter, Depends, Request, Response
 from fastapi.responses import RedirectResponse
 
+from db.database import get_db
 from services.auth.oauth_providers.github import (
     get_github_auth_url, 
     exchange_code_for_token, 
@@ -8,6 +9,8 @@ from services.auth.oauth_providers.github import (
 )
 from repository.users.user_repository import UsersRepository
 from services.auth.jwt.jwt_auth import create_access_token, create_refresh_token
+
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 router = APIRouter(
@@ -22,7 +25,7 @@ async def github_login():
 
 
 @router.get("/github/callback")
-async def github_callback(request: Request, response: Response):
+async def github_callback(request: Request, response: Response, session: AsyncSession = Depends(get_db)):
     code = request.query_params.get("code")
     if not code:
         return {
@@ -36,15 +39,16 @@ async def github_callback(request: Request, response: Response):
     if not email:
         email = f"{user_data['id']}@github.com"
 
-    existing_user = await UsersRepository.find_one_or_none(email=email)
+    existing_user = await UsersRepository.find_one_or_none(session=session, email=email)
 
     if not existing_user:
         await UsersRepository.add(
+            session=session,
             email=email,
-            login=user_data["login"],
+            username=user_data["login"],
             hashed_password="github_auth",
         )
-        existing_user = await UsersRepository.find_one_or_none(email=email)
+        existing_user = await UsersRepository.find_one_or_none(session=session, email=email)
 
     access_token = create_access_token({"sub": str(existing_user.user_id)})
     refresh_token = create_refresh_token({"sub": str(existing_user.user_id)})
@@ -73,6 +77,6 @@ async def github_callback(request: Request, response: Response):
         "user": {
             "id": existing_user.user_id,
             "email": existing_user.email,
-            "login": existing_user.login
+            "username": existing_user.username
         }
     }

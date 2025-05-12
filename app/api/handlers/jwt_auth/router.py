@@ -24,14 +24,14 @@ router = APIRouter(
 
 
 @router.post("/register")
-async def register_user(user_data: SUserCreate, db: AsyncSession = Depends(get_db)):
-    existing_user = await UsersRepository.find_one_or_none(email=user_data.email, session=db)
+async def register_user(user_data: SUserCreate, session: AsyncSession = Depends(get_db)):
+    existing_user = await UsersRepository.find_one_or_none(email=user_data.email, session=session)
     if existing_user:
         raise UserAlreadyExistsException
     
     hashed_password = get_password_hash(user_data.password)
     await UsersRepository.add(
-        session=db,
+        session=session,
         email=user_data.email,
         username=user_data.username,
         hashed_password=hashed_password

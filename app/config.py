@@ -11,7 +11,12 @@ class Settings(BaseSettings):
     ALGORITHM: str 
     SECRET_KEY: str
     
-    GITHUB_CLIENT_ID: str 
+    GITHUB_CLIENT_ID: str
+    GITHUB_AUTH_URL: str
+    GITHUB_CLIENT_SECRET: str
+    GITHUB_REDIRECT_URI: str
+    GITHUB_TOKEN_URL: str 
+    GITHUB_USER_URL: str  
     
     @property
     def DATABASE_URL(self):
