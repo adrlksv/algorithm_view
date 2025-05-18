@@ -7,8 +7,11 @@ from alembic import context
 
 from app.db.database import Base, DATABASE_URL
 from app.db.users.models import User
-from app.db.edu_example.models import EduExample
-from app.db.algorithms.models import Algorithm
+from app.db.example.models import Example
+from app.db.algorithm.models import Algorithm
+from app.db.algorithm_parameter.models import AlgorithmParameter
+from app.db.comparison.models import Comparison
+from app.db.key.models import Key
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

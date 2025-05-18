@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Mapped, mapped_column
 
-from db.database import Base
+from app.db.database import Base
 
 from datetime import datetime
 
@@ -11,4 +11,8 @@ class User(Base):
     username: Mapped[str] = mapped_column(nullable=False)
     email: Mapped[str] = mapped_column(nullable=True)
     hashed_password: Mapped[str] = mapped_column(nullable=False)
-    created_at: Mapped[datetime] = mapped_column(nullable=False, default=datetime.utcnow())
+    created_at: Mapped[datetime] = mapped_column(
+        nullable=False, 
+        default=datetime.utcnow(),
+    )
+    is_active: Mapped[bool] = mapped_column(nullable=False, default=True)
