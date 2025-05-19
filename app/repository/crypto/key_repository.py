@@ -1,3 +1,4 @@
+from datetime import datetime
 from sqlalchemy import select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -11,23 +12,22 @@ class KeyRepository(BaseRepository):
     model = Key
 
     @classmethod
-    async def create_key(
+    async def create(
         cls,
         session: AsyncSession,
-        user_id: int,
         algorithm_type: str,
-        public_key: str,
-        # private_key: Optional[str],
-        key_length: int
-    ):
-        key_data = {
-            "user_id": user_id,
-            "algorithm_type": algorithm_type,
-            "key_data": public_key,
-            # "private_key": private_key,
-            "key_length": key_length
-        }
-        return await cls.add(session, **key_data)
+        key_data: str,
+        key_length: int,
+    ) -> Key:
+        key = Key(
+            algorithm_type=algorithm_type,
+            key_data=key_data,
+            key_length=key_length,
+        )
+        session.add(key)
+        await session.commit()
+        await session.refresh(key)
+        return key
 
     @classmethod
     async def get_user_keys(

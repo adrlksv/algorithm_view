@@ -10,6 +10,9 @@ from app.db.database import Base
 
 class Key(Base):
     __tablename__ = "key"
+    __table_args__ = {
+        "extend_existing": True
+    }
     
     id: Mapped[int] = mapped_column(primary_key=True, nullable=False, index=True)
     algorithm_type: Mapped[AlgorithmType] = mapped_column(

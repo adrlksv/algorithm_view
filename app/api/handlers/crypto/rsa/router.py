@@ -9,50 +9,49 @@ from app.schemas.crypto.rsa.schemas import SRSAKeyGenerate, SRSAKeyResponse
 from api.dependencies.auth_depends import get_current_user
 from app.db.users.models import User
 
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(
-    prefix="/api/crypto/rsa",
+    prefix="/rsa",
     tags=["RSA Keys"]
 )
 
 
 @router.post("/generate", response_model=SRSAKeyResponse)
 async def generate_rsa_keys(
-    key_data: SRSAKeyGenerate,
+    request: SRSAKeyGenerate,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     try:
-        key_pair = await RSAKeyService.generate_key_pair(key_data.key_size)
+        logger.info(f"Generating RSA keys for user {current_user.user_id}")
+        # 1. Генерация ключей
+        keys = await RSAKeyService.generate_keys(request.key_size)
+        logger.debug(f"Generated keys: {keys.keys()}")  # Логируем только ключи без значений
         
-        key_record = await KeyRepository.create_key(
+        # 2. Сохранение в БД (оба ключа в key_data как JSON)
+        key_record = await RSAKeyService.create_key_record(
             session=db,
-            user_id=current_user.user_id,
-            algorithm_type="RSA",
-            key_data=key_pair.public_key,
-            # private_key=key_pair.private_key,
-            key_length=key_data.key_size
+            key_size=request.key_size,
+            keys=keys
+        )
+        logger.info(f"Key record created: {key_record.id}")
+        
+        # 3. Возврат клиенту
+        return SRSAKeyResponse(
+            key_id=key_record.id,
+            public_key=keys["public_key"],
+            private_key=keys["private_key"],
+            key_size=request.key_size,
+            created_at=key_record.created_at
         )
         
-        return {
-            # "key_id": key_record.id,
-            "public_key": key_pair.public_key,
-            # "private_key": key_pair.private_key,
-            "key_size": key_data.key_size
-        }
     except ValueError as e:
+        logger.error(f"Validation error: {str(e)}")
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
+        logger.critical(f"Unexpected error: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail="Internal server error")
-
-@router.get("/my-keys", response_model=list[SRSAKeyResponse])
-async def get_user_rsa_keys(
-    current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
-):
-    keys = await KeyRepository.get_user_keys(
-        session=db,
-        user_id=current_user.user_id,
-        algorithm_type="RSA"
-    )
-    return keys

@@ -6,6 +6,9 @@ from app.db.database import Base
 
 class AlgorithmParameter(Base):
     __tablename__ = "algorithm_parameters"
+    __table_args__ = {
+        "extend_existing": True
+    }
     
     id: Mapped[int] = mapped_column(primary_key=True, nullable=False, index=True)
     algorithm_id: Mapped[int] = mapped_column(

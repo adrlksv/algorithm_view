@@ -7,6 +7,9 @@ from app.db.database import Base
 
 class Example(Base):
     __tablename__ = "example"
+    __table_args__ = {
+        "extend_existing": True
+    }
     
     example_id: Mapped[int] = mapped_column(
         primary_key=True, 

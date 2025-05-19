@@ -7,6 +7,9 @@ from app.db.database import Base
 
 class Comparison(Base):
     __tablename__ = "comparison"
+    __table_args__ = {
+        "extend_existing": True
+    }
     
     id: Mapped[int] = mapped_column(
         primary_key=True, 
