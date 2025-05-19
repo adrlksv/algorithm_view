@@ -1,7 +1,5 @@
 from fastapi import FastAPI
 
-from app.core import setup_logging
-
 from api.handlers.jwt_auth.router import router as jwt_auth_router
 from api.handlers.oauth.router import router as github_oauth_router
 from api.handlers.crypto.aes.router import router as aes_router
@@ -16,8 +14,6 @@ def create_app() -> FastAPI:
         debug=True,
         title="Generate key",
     )
-    
-    setup_logging()
     
     app.include_router(jwt_auth_router)
     app.include_router(github_oauth_router)

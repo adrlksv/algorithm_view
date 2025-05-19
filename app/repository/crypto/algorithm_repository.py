@@ -11,7 +11,7 @@ class AlgorithmRepository(BaseRepository):
     model = Algorithm
 
     @classmethod
-    async def get_algorithm_by_name(
+    async def get_by_name(
         cls,
         session: AsyncSession,
         name: str
