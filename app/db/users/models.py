@@ -6,6 +6,9 @@ from datetime import datetime
 
 class User(Base):
     __tablename__ = "user"
+    __table_args__ = {
+        "extend_existing": True
+    }
     
     user_id: Mapped[int] = mapped_column(primary_key=True, nullable=False)
     username: Mapped[str] = mapped_column(nullable=False)
