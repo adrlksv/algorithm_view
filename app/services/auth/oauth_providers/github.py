@@ -1,6 +1,6 @@
 import httpx
 
-from config import settings
+from app.config import settings
 
 
 def get_github_auth_url():

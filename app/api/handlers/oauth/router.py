@@ -1,14 +1,14 @@
 from fastapi import APIRouter, Depends, Request, Response
 from fastapi.responses import RedirectResponse
 
-from db.database import get_db
-from services.auth.oauth_providers.github import (
+from app.db.database import get_db
+from app.services.auth.oauth_providers.github import (
     get_github_auth_url, 
     exchange_code_for_token, 
     get_github_user
 )
-from repository.users.user_repository import UsersRepository
-from services.auth.jwt.jwt_auth import create_access_token, create_refresh_token
+from app.repository.users.user_repository import UsersRepository
+from app.services.auth.jwt.jwt_auth import create_access_token, create_refresh_token
 
 from sqlalchemy.ext.asyncio import AsyncSession
 

@@ -2,14 +2,15 @@ from fastapi import APIRouter, Request, Response, Depends
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from api.dependencies.auth_depends import get_current_user
-from db.database import get_db
+from app.api.dependencies.auth_depends import get_current_user
+from app.db.database import get_db
 
-from db.users.models import User
-from exceptions.exceptions import IncorrectEmailOrPasswordException, TokenAbsentException, UserAlreadyExistsException
-from repository.users.user_repository import UsersRepository
-from schemas.users.schemas import SUserCreate, SUserLogin
-from services.auth.jwt.jwt_auth import (
+from app.db.users.models import User
+
+from app.exceptions.exceptions import IncorrectEmailOrPasswordException, TokenAbsentException, UserAlreadyExistsException
+from app.repository.users.user_repository import UsersRepository
+from app.schemas.users.schemas import SUserCreate, SUserLogin
+from app.services.auth.jwt.jwt_auth import (
     authenticate_user, 
     create_access_token,
     create_refresh_token, 

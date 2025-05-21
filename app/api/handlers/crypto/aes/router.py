@@ -1,10 +1,14 @@
 # app/api/routers/aes.py
 from fastapi import APIRouter, Depends, HTTPException
+
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.db.database import get_db
-from crypto.algorithms.aes.service import AesService
-from repository.crypto.example_repository import ExampleRepository
-from repository.crypto.key_repository import KeyRepository
+
+from app.crypto.algorithms.aes.service import AesService
+
+from app.repository.crypto.example_repository import ExampleRepository
+from app.repository.crypto.key_repository import KeyRepository
 
 
 router = APIRouter(prefix="/aes", tags=["AES"])

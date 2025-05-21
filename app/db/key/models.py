@@ -3,7 +3,7 @@ from datetime import datetime
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy import Enum as SQLAlchemyEnum
 
-from db.algorithm.models import AlgorithmType
+from app.db.algorithm.models import AlgorithmType
 
 from app.db.database import Base
 

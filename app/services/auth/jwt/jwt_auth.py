@@ -5,7 +5,7 @@ from passlib.context import CryptContext
 from pydantic import EmailStr
 
 from config import settings
-from repository.users.user_repository import UsersRepository
+from app.repository.users.user_repository import UsersRepository
 
 from sqlalchemy.ext.asyncio import AsyncSession
 

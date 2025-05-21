@@ -6,10 +6,10 @@ from fastapi import Depends, Request
 from jose import JWTError, jwt 
 
 from config import settings
-from db.database import get_db
+from app.db.database import get_db
 from repository.users.user_repository import UsersRepository
 
-from exceptions.exceptions import (
+from app.exceptions.exceptions import (
     TokenAbsentException,
     IncorrectTokenFormatException,
     TokenExpiredException,
