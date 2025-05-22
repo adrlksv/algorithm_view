@@ -19,16 +19,24 @@ export const useAESStore = defineStore('aes', {
         this.iv = result.iv;
         this.encrypted = result.encrypted_sample;
 
-        this.steps = [
-          { title: 'Генерация ключа', content: this.key },
-          { title: 'Генерация IV', content: this.iv },
-          { title: 'Шифрование текста', content: this.encrypted },
-        ];
+        await this.addStep('Генерация ключа', this.key);
+        await this.addStep('Генерация IV', this.iv);
+        await this.addStep('Шифрование текста', this.encrypted);
+
+        // this.steps = [
+        //   { title: 'Генерация ключа', content: this.key },
+        //   { title: 'Генерация IV', content: this.iv },
+        //   { title: 'Шифрование текста', content: this.encrypted },
+        // ];
       } catch (e) {
         console.error('Ошибка AES:', e);
       } finally {
         this.loading = false;
       }
+    },
+    async addStep(title, content) {
+      this.steps.push({ title, content });
+      await new Promise(resolve => setTimeout(resolve, 2000)); // Задержка перед следующим шагом
     }
   }
 });
