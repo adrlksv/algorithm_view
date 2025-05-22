@@ -1,14 +1,15 @@
-# app/api/routers/aes.py
 from fastapi import APIRouter, Depends, HTTPException
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from api.dependencies.auth_depends import get_current_user
 from app.db.database import get_db
 
 from app.crypto.algorithms.aes.service import AesService
 
 from app.repository.crypto.example_repository import ExampleRepository
 from app.repository.crypto.key_repository import KeyRepository
+from db.users.models import User
 
 
 router = APIRouter(prefix="/aes", tags=["AES"])
@@ -18,24 +19,22 @@ router = APIRouter(prefix="/aes", tags=["AES"])
 async def generate_aes_key(
     key_size: int = 256,
     sample_text: str = "Test message",
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(get_current_user)
 ):
     try:
-        # Генерация ключа
         key_hex, iv_hex = await AesService.generate_key(key_size)
         
-        # Шифрование тестового сообщения
         encrypted = await AesService.encrypt(key_hex, iv_hex, sample_text)
         
-        # Сохранение в БД
         key = await KeyRepository.create(
             db, "AES", f"{key_hex}:{iv_hex}", key_size
         )
         
         example = await ExampleRepository.create(
             db,
-            user_id=1,  # В реальном приложении брать из авторизации
-            algorithm_id=1,  # ID алгоритма AES из БД
+            user_id=user.user_id,
+            algorithm_id=1,
             key_id=key.id,
             input_data=sample_text,
             output_data=encrypted,

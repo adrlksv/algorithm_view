@@ -10,16 +10,15 @@ export const useAESStore = defineStore('aes', {
     loading: false,
   }),
   actions: {
-    async generateAES() {
+    async generateAES(keySize = 256, sampleText = "Test message") {
       this.loading = true;
       this.steps = [];
       try {
-        const result = await generateAESKey();
+        const result = await generateAESKey(keySize, sampleText);
         this.key = result.key;
         this.iv = result.iv;
         this.encrypted = result.encrypted_sample;
 
-        // Моделируем пошаговый процесс
         this.steps = [
           { title: 'Генерация ключа', content: this.key },
           { title: 'Генерация IV', content: this.iv },
