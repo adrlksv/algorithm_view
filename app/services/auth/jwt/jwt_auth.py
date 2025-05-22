@@ -4,7 +4,7 @@ from jose import jwt
 from passlib.context import CryptContext
 from pydantic import EmailStr
 
-from config import settings
+from app.config import settings
 from app.repository.users.user_repository import UsersRepository
 
 from sqlalchemy.ext.asyncio import AsyncSession

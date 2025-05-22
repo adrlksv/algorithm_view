@@ -5,9 +5,9 @@ from datetime import datetime
 from fastapi import Depends, Request
 from jose import JWTError, jwt 
 
-from config import settings
+from app.config import settings
 from app.db.database import get_db
-from repository.users.user_repository import UsersRepository
+from app.repository.users.user_repository import UsersRepository
 
 from app.exceptions.exceptions import (
     TokenAbsentException,
