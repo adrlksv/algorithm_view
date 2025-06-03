@@ -4,12 +4,14 @@ import Register from '../views/Register.vue';
 import Home from '../views/Home.vue';
 import { useAuthStore } from '../store/auth';
 import AESView from '../views/AESView.vue';
+import RSAView from '../views/RSAView.vue';
 
 const routes = [
   { path: '/', name: 'Home', component: Home, meta: { requiresAuth: true } },
   { path: '/login', name: 'Login', component: Login },
   { path: '/register', name: 'Register', component: Register },
   { path: '/aes', component: AESView },
+  { path: '/rsa', component: RSAView, meta: { requiresAuth: true } },
 
 ];
 

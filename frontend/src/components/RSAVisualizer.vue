@@ -3,9 +3,9 @@
     <!-- Заголовок и управление -->
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
       <div>
-        <h2 class="text-2xl font-bold text-green-400">Состояние шифрования AES</h2>
+        <h2 class="text-2xl font-bold text-green-400">Генерация RSA ключей</h2>
         <div class="text-sm text-green-300 opacity-80">
-          Раунд: {{ currentRound }}/{{ totalRounds }}
+          Шаг {{ currentStepIndex + 1 }} из {{ steps.length }}
         </div>
       </div>
       
@@ -42,36 +42,20 @@
       </div>
     </div>
 
-    <!-- Визуализация блока -->
-    <div class="mb-8">
-      <div class="grid grid-cols-4 gap-3 mb-4 justify-center">
-        <transition-group name="cell" tag="div" class="contents">
-          <div
-            v-for="(byte, idx) in currentState"
-            :key="`${idx}-${byte}-${stepKey}`"
-            class="w-14 h-14 flex items-center justify-center rounded font-mono text-sm border border-gray-700 text-green-400 transition-all duration-300 relative"
-            :class="{
-              'transform scale-110 bg-green-900 border-green-500 text-green-300 shadow-lg shadow-green-900/30': highlightedBytes.includes(idx)
-            }"
-          >
-            {{ byte }}
-            <div class="absolute bottom-1 text-xs text-gray-500">
-              {{ getBytePosition(idx) }}
-            </div>
-          </div>
-        </transition-group>
-      </div>
-      
-      <div class="text-center text-sm text-gray-500 mb-2">
-        State Matrix ({{ currentState.length }} bytes)
+    <!-- Математические операции -->
+    <div class="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div v-for="(op, idx) in currentOperations" :key="idx"
+           class="p-4 rounded-lg bg-gray-800 border border-gray-700">
+        <h3 class="text-green-400 font-mono mb-2">{{ op.title }}</h3>
+        <div class="text-gray-300 font-mono text-sm whitespace-pre-wrap">{{ op.value }}</div>
       </div>
     </div>
 
-    <!-- Прогресс шагов -->
+    <!-- Прогресс -->
     <div class="mb-6">
       <div class="flex justify-between text-sm text-green-300 mb-1">
         <span>Прогресс</span>
-        <span>Шаг {{ currentStepIndex + 1 }}/{{ steps.length }}</span>
+        <span>{{ Math.round((currentStepIndex + 1) / steps.length * 100) }}%</span>
       </div>
       <div class="h-2 rounded-full overflow-hidden bg-gray-700">
         <div 
@@ -81,30 +65,23 @@
       </div>
     </div>
 
-    <!-- Шаги описания -->
+    <!-- Описание шага -->
     <div class="space-y-4">
       <transition name="fade-slide" mode="out-in">
         <div
           :key="`step-${currentStepIndex}`"
           class="p-4 rounded-lg bg-gray-800 border border-gray-700 transition-all duration-300"
         >
-          <h2 class="text-lg font-bold mb-2 flex items-center gap-2 text-green-400">
-            <span>{{ currentStep.title }}</span>
-            <span v-if="currentStep.round" class="text-xs px-2 py-1 rounded bg-green-700 text-green-100">
-              Раунд {{ currentStep.round }}
-            </span>
+          <h2 class="text-lg font-bold mb-2 text-green-400">
+            {{ currentStep.title }}
           </h2>
           
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="grid grid-cols-1 gap-4">
             <div>
-              <p class="mb-3 text-gray-300">{{ currentStep.content }}</p>
-              <div v-if="currentStep.details" class="text-sm text-gray-400">
+              <p class="mb-3 text-gray-300 whitespace-pre-line">{{ currentStep.content }}</p>
+              <div v-if="currentStep.details" class="text-sm text-gray-400 whitespace-pre-line">
                 {{ currentStep.details }}
               </div>
-            </div>
-            
-            <div v-if="currentStep.extra" class="p-3 rounded text-sm font-mono overflow-x-auto bg-gray-700 border border-gray-600 text-green-300">
-              {{ currentStep.extra }}
             </div>
           </div>
         </div>
@@ -117,7 +94,10 @@
 import { ref, computed, watch, onUnmounted } from 'vue';
 
 const props = defineProps({
-  steps: Array,
+  steps: {
+    type: Array,
+    required: true
+  },
   animationSpeed: {
     type: Number,
     default: 1000
@@ -127,44 +107,15 @@ const props = defineProps({
 const emit = defineEmits(['step-changed']);
 
 const currentStepIndex = ref(0);
-const currentState = ref(Array(16).fill('00'));
-const highlightedBytes = ref([]);
-const stepKey = ref(0);
 const isPlaying = ref(false);
 let playInterval = null;
 
 const currentStep = computed(() => props.steps[currentStepIndex.value] || {});
-const totalRounds = computed(() => Math.max(...props.steps.map(s => s.round || 0), 0));
-const currentRound = computed(() => currentStep.value.round || 0);
-
-const getBytePosition = (idx) => {
-  const row = Math.floor(idx / 4);
-  const col = idx % 4;
-  return `r${row}c${col}`;
-};
-
-const updateState = () => {
-  const step = props.steps[currentStepIndex.value];
-  if (step?.state) {
-    // Вычисляем измененные байты для анимации
-    if (currentStepIndex.value > 0) {
-      const prevState = props.steps[currentStepIndex.value - 1].state || [];
-      highlightedBytes.value = step.state
-        .map((byte, i) => byte !== prevState[i] ? i : -1)
-        .filter(i => i !== -1);
-      
-      setTimeout(() => highlightedBytes.value = [], props.animationSpeed * 0.7);
-    }
-    
-    currentState.value = [...step.state];
-    stepKey.value++;
-  }
-};
+const currentOperations = computed(() => currentStep.value.operations || []);
 
 const nextStep = () => {
   if (currentStepIndex.value < props.steps.length - 1) {
     currentStepIndex.value++;
-    updateState();
     emit('step-changed', currentStepIndex.value);
   }
 };
@@ -172,7 +123,6 @@ const nextStep = () => {
 const prevStep = () => {
   if (currentStepIndex.value > 0) {
     currentStepIndex.value--;
-    updateState();
     emit('step-changed', currentStepIndex.value);
   }
 };
@@ -197,7 +147,6 @@ const playPause = () => {
 watch(() => props.steps, (newSteps) => {
   if (newSteps.length) {
     currentStepIndex.value = 0;
-    updateState();
   }
 }, { immediate: true });
 
@@ -221,25 +170,9 @@ onUnmounted(() => {
 .fade-slide-leave-active {
   transition: all 0.3s ease;
 }
-.fade-slide-enter-from {
-  opacity: 0;
-  transform: translateY(10px);
-}
+.fade-slide-enter-from,
 .fade-slide-leave-to {
   opacity: 0;
-  transform: translateY(-10px);
-}
-
-.cell-enter-active,
-.cell-leave-active {
-  transition: all 0.5s ease;
-}
-.cell-enter-from {
-  opacity: 0;
-  transform: scale(0.8);
-}
-.cell-leave-to {
-  opacity: 0;
-  transform: scale(1.2);
+  transform: translateY(10px);
 }
 </style>

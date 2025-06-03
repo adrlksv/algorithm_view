@@ -4,13 +4,18 @@ export class AESVisualizer {
     this.plaintext = plaintext;
     this.steps = [];
     this.state = Array(16).fill('00');
+    this.roundKeys = this.generateRoundKeys();
   }
 
   async visualize() {
     this.steps = [];
     
-    // 1. Генерация ключа (имитация)
-    await this.addStep('Инициализация', `Шифрование текста: "${this.plaintext}"`, this.state);
+    // 1. Инициализация
+    await this.addStep('Инициализация', 
+      `Начало шифрования текста: "${this.plaintext}" с ключом ${this.keySize} бит`,
+      this.state,
+      `Размер ключа: ${this.keySize} бит\nКоличество раундов: ${this.getRoundsCount()}`
+    );
     
     // 2. Дополнение текста
     await this.simulatePadding();
@@ -22,7 +27,7 @@ export class AESVisualizer {
     const rounds = this.getRoundsCount();
     
     // Начальное добавление ключа
-    await this.addRoundKey('Начальное добавление ключа');
+    await this.addRoundKey(0, 'Начальное добавление ключа');
     
     // Основные раунды
     for (let round = 1; round <= rounds; round++) {
@@ -30,7 +35,11 @@ export class AESVisualizer {
     }
     
     // Финальный результат
-    await this.addStep('Завершение', 'Шифрование завершено', this.state);
+    await this.addStep('Завершение', 
+      'Шифрование завершено. Получен финальный зашифрованный блок.', 
+      this.state,
+      `Финальный зашифрованный текст: ${this.state.join(' ')}`
+    );
     
     return this.steps;
   }
@@ -39,18 +48,38 @@ export class AESVisualizer {
     return this.keySize === 128 ? 10 : this.keySize === 192 ? 12 : 14;
   }
 
+  generateRoundKeys() {
+    const rounds = this.getRoundsCount() + 1; // +1 для начального ключа
+    const keys = [];
+    
+    // Генерация псевдослучайных ключей для визуализации
+    for (let i = 0; i < rounds; i++) {
+      keys.push(Array.from({length: 16}, () => 
+        Math.floor(Math.random() * 256).toString(16).padStart(2, '0')
+      ));
+    }
+    
+    return keys;
+  }
+
   async simulatePadding() {
     const blockSize = 16;
     const padLength = blockSize - (this.plaintext.length % blockSize);
     const paddedText = this.plaintext + String.fromCharCode(padLength).repeat(padLength);
     
-    this.addStep('Дополнение данных', `Добавлено ${padLength} байт заполнения`, 
-      Array.from({length: 16}, (_, i) => 
-        i < this.plaintext.length ? 
-          this.plaintext.charCodeAt(i).toString(16).padStart(2, '0') :
-          padLength.toString(16).padStart(2, '0')
-      )
+    const paddedState = Array.from({length: 16}, (_, i) => 
+      i < this.plaintext.length ? 
+        this.plaintext.charCodeAt(i).toString(16).padStart(2, '0') :
+        padLength.toString(16).padStart(2, '0')
     );
+    
+    this.addStep('Дополнение данных (Padding)', 
+      `Текст дополнен до кратного 16 байтам. Добавлено ${padLength} байт заполнения.`,
+      paddedState,
+      `Исходная длина: ${this.plaintext.length} байт\nДобавлено: ${padLength} байт\nНовая длина: ${paddedText.length} байт`
+    );
+    
+    this.state = paddedState;
   }
 
   async convertToState() {
@@ -59,7 +88,11 @@ export class AESVisualizer {
       c.charCodeAt(0).toString(16).padStart(2, '0')
     );
     
-    this.addStep('Преобразование в State', 'Текст преобразован в матрицу 4x4', [...this.state]);
+    this.addStep('Преобразование в State Matrix', 
+      'Текст преобразован в матрицу состояний 4x4 (16 байт)',
+      [...this.state],
+      'State Matrix представляет собой двумерный массив 4x4 байта,\nгде каждый байт исходного текста занимает свою позицию.'
+    );
   }
 
   async processRound(round, isFinalRound) {
@@ -75,18 +108,23 @@ export class AESVisualizer {
     }
     
     // AddRoundKey
-    await this.addRoundKey(`Раунд ${round}: Добавление ключа`);
+    await this.addRoundKey(round, `Раунд ${round}: Добавление ключа раунда`);
   }
 
   async subBytes(round) {
     // Упрощенная замена байтов (в реальном AES используется S-Box)
-    this.state = this.state.map(byte => {
+    const newState = this.state.map(byte => {
       const val = parseInt(byte, 16);
       // Простое преобразование для демонстрации
-      return ((val * 7) % 256).toString(16).padStart(2, '0');
+      return ((val * 7 + 99) % 256).toString(16).padStart(2, '0');
     });
     
-    this.addStep(`Раунд ${round}: SubBytes`, 'Каждый байт заменен по таблице замен (S-Box)', [...this.state]);
+    this.state = newState;
+    this.addStep(`Раунд ${round}: SubBytes`, 
+      'Каждый байт заменен по таблице замен (S-Box). Это нелинейная замена байтов,\nкоторая обеспечивает стойкость алгоритма к криптоанализу.',
+      [...this.state],
+      'S-Box преобразует каждый байт состояния независимо,\nиспользуя специальную таблицу замен.'
+    );
   }
 
   async shiftRows(round) {
@@ -94,16 +132,23 @@ export class AESVisualizer {
     const shifted = [...this.state];
     
     // Строка 1: сдвиг на 1
-    for (let i = 1; i < 4; i++) {
-      const temp = shifted[i];
-      shifted[i] = shifted[i + 4];
-      shifted[i + 4] = shifted[i + 8];
-      shifted[i + 8] = shifted[i + 12];
-      shifted[i + 12] = temp;
-    }
+    [shifted[1], shifted[5], shifted[9], shifted[13]] = 
+      [shifted[5], shifted[9], shifted[13], shifted[1]];
+    
+    // Строка 2: сдвиг на 2
+    [shifted[2], shifted[6], shifted[10], shifted[14]] = 
+      [shifted[10], shifted[14], shifted[2], shifted[6]];
+    
+    // Строка 3: сдвиг на 3
+    [shifted[3], shifted[7], shifted[11], shifted[15]] = 
+      [shifted[15], shifted[3], shifted[7], shifted[11]];
     
     this.state = shifted;
-    this.addStep(`Раунд ${round}: ShiftRows`, 'Строки матрицы сдвинуты', [...this.state]);
+    this.addStep(`Раунд ${round}: ShiftRows`, 
+      'Строки матрицы сдвинуты циклически:\n- Строка 0 не сдвигается\n- Строка 1 сдвигается на 1 позицию\n- Строка 2 сдвигается на 2 позиции\n- Строка 3 сдвигается на 3 позиции',
+      [...this.state],
+      'ShiftRows обеспечивает "размазывание" байтов по матрице состояния,\nчто увеличивает диффузию в алгоритме.'
+    );
   }
 
   async mixColumns(round) {
@@ -125,33 +170,56 @@ export class AESVisualizer {
       }
     }
     
-    this.addStep(`Раунд ${round}: MixColumns`, 'Столбцы матрицы перемешаны', [...this.state]);
+    this.addStep(`Раунд ${round}: MixColumns`, 
+      'Каждый столбец матрицы состояния умножается на фиксированную матрицу\nв конечном поле GF(2^8). Это обеспечивает диффузию между байтами.',
+      [...this.state],
+      'MixColumns преобразует каждый столбец матрицы состояния независимо,\nиспользуя умножение матриц в конечном поле.'
+    );
   }
 
   xorBytes(a, b) {
     return (parseInt(a, 16) ^ parseInt(b, 16)).toString(16).padStart(2, '0');
   }
 
-  async addRoundKey(title) {
-    // Генерация "псевдоключа" для визуализации
-    const roundKey = Array.from({length: 16}, () => 
-      Math.floor(Math.random() * 256).toString(16).padStart(2, '0')
-    );
+  async addRoundKey(round, title) {
+    const roundKey = this.roundKeys[round];
     
     // "Применение" ключа
-    this.state = this.state.map((byte, i) => 
+    const newState = this.state.map((byte, i) => 
       this.xorBytes(byte, roundKey[i])
     );
     
-    this.addStep(title, 'Раундовый ключ применен к состоянию', [...this.state]);
+    this.state = newState;
+    this.addStep(title, 
+      `Ключ раунда ${round} применен к состоянию с помощью операции XOR.`,
+      [...this.state],
+      `Ключ раунда:\n${this.formatKeyForDisplay(roundKey)}`
+    );
   }
 
-  addStep(title, description, state = null) {
-    this.steps.push({
+  formatKeyForDisplay(key) {
+    return key.reduce((acc, byte, i) => {
+      if (i % 4 === 0) acc += '\n';
+      acc += byte + ' ';
+      return acc;
+    }, '').trim();
+  }
+
+  addStep(title, content, state = null, details = '', extra = '') {
+    const step = {
       title,
-      content: description,
-      state: state || [...this.state]
-    });
+      content,
+      state: state || [...this.state],
+      details,
+      extra
+    };
+    
+    if (title.includes('Раунд')) {
+      const roundMatch = title.match(/Раунд (\d+)/);
+      if (roundMatch) step.round = parseInt(roundMatch[1]);
+    }
+    
+    this.steps.push(step);
     
     // Возвращаем Promise для имитации асинхронности
     return new Promise(resolve => setTimeout(resolve, 100));

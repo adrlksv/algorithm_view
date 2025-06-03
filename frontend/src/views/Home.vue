@@ -1,9 +1,30 @@
 <template>
-  <div class="flex flex-col items-center justify-center min-h-screen bg-black text-white p-6">
-    <h1 class="text-4xl mb-6 neon-text">Добро пожаловать, {{ authStore.user?.username }}!</h1>
-    <div class="flex gap-4">
-      <button @click="goToAES" class="neon-button">Перейти к AES</button>
-      <button @click="handleLogout" class="neon-button-red">Выйти</button>
+  <div class="min-h-screen bg-gray-900 text-gray-100 p-6 flex flex-col items-center justify-center">
+    <div class="w-full max-w-md text-center">
+      <h1 class="text-4xl md:text-5xl font-bold mb-6 text-green-400">Добро пожаловать, {{ authStore.user?.username }}!</h1>
+      
+      <div class="flex flex-col gap-4 justify-center">
+        <button 
+          @click="goToAES" 
+          class="px-6 py-3 rounded-lg font-medium bg-green-700 hover:bg-green-600 text-white transition-colors focus:outline-none focus:ring-2 focus:ring-green-500"
+        >
+          Перейти к AES
+        </button>
+        
+        <button 
+          @click="goToRSA"
+          class="px-6 py-3 rounded-lg font-medium bg-blue-700 hover:bg-blue-600 text-white transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          Перейти к RSA
+        </button>
+        
+        <button 
+          @click="handleLogout"
+          class="px-6 py-3 rounded-lg font-medium bg-gray-700 hover:bg-gray-600 text-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500"
+        >
+          Выйти
+        </button>
+      </div>
     </div>
   </div>
 </template>
@@ -23,46 +44,8 @@ const handleLogout = async () => {
 const goToAES = () => {
   router.push('/aes');
 };
+
+const goToRSA = () => {
+  router.push('/rsa');
+};
 </script>
-
-<style scoped>
-.neon-text {
-  text-shadow: 0 0 5px #0ff, 0 0 10px #0ff, 0 0 20px #0ff;
-}
-
-.neon-button {
-  background: transparent;
-  border: 2px solid #0ff;
-  color: #0ff;
-  padding: 0.5rem 1rem;
-  border-radius: 0.5rem;
-  font-weight: bold;
-  cursor: pointer;
-  transition: 0.3s;
-  text-shadow: 0 0 10px #0ff;
-}
-
-.neon-button:hover {
-  background-color: #0ff;
-  color: black;
-  box-shadow: 0 0 15px #0ff;
-}
-
-.neon-button-red {
-  background: transparent;
-  border: 2px solid #f00;
-  color: #f00;
-  padding: 0.5rem 1rem;
-  border-radius: 0.5rem;
-  font-weight: bold;
-  cursor: pointer;
-  transition: 0.3s;
-  text-shadow: 0 0 10px #f00;
-}
-
-.neon-button-red:hover {
-  background-color: #f00;
-  color: black;
-  box-shadow: 0 0 15px #f00;
-}
-</style>
