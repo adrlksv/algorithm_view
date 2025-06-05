@@ -1,4 +1,3 @@
-<!-- components/AESIntroduction.vue -->
 <template>
   <div class="p-6 rounded-xl shadow-lg bg-gray-800 border border-gray-700 transition-all duration-300">
     <h2 class="text-2xl font-bold mb-4 text-green-400">Введение в AES</h2>
@@ -19,11 +18,26 @@
         <li>192 бит - 12 раундов</li>
         <li>256 бит - 14 раундов</li>
       </ul>
-      
-      <p>
-        Каждый раунд (кроме последнего) состоит из четырех преобразований:
-        SubBytes, ShiftRows, MixColumns и AddRoundKey. В последнем раунде MixColumns отсутствует.
-      </p>
+
+      <h3 class="text-lg font-semibold text-green-300 mt-4 mb-2">Основные преобразования:</h3>
+      <ul class="list-disc pl-6 space-y-2">
+        <li>
+          <strong>SubBytes</strong> - нелинейная замена каждого байта через S-Box:
+          <div class="text-sm text-gray-400 mt-1">S(x) = M·x⁻¹ + C</div>
+        </li>
+        <li>
+          <strong>ShiftRows</strong> - циклический сдвиг строк матрицы состояния:
+          <div class="text-sm text-gray-400 mt-1">Строка N сдвигается на N байт (0-3)</div>
+        </li>
+        <li>
+          <strong>MixColumns</strong> - умножение столбцов на матрицу в GF(2⁸):
+          <div class="text-sm text-gray-400 mt-1">Используется многочлен x⁸ + x⁴ + x³ + x + 1</div>
+        </li>
+        <li>
+          <strong>AddRoundKey</strong> - побитовый XOR с ключом раунда:
+          <div class="text-sm text-gray-400 mt-1">state[i,j] ⊕ round_key[i,j]</div>
+        </li>
+      </ul>
       
       <h3 class="text-xl font-semibold text-green-300 mt-6 mb-2">Основные преимущества AES:</h3>
       <ul class="list-disc pl-6 space-y-1">

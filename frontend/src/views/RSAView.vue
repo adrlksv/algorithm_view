@@ -1,3 +1,4 @@
+<!-- RSAView.vue -->
 <template>
   <div class="min-h-screen bg-gray-900 text-gray-100 p-6">
     <button
@@ -20,6 +21,25 @@
           <div class="text-center mb-10">
             <h1 class="text-4xl md:text-5xl font-bold mb-4 text-green-400">RSA Алгоритм</h1>
             <p class="text-lg text-green-300">Генерация асимметричных ключей</p>
+          </div>
+
+          <button
+            @click="showIntroduction = true"
+            class="w-full mb-6 py-3 px-6 rounded-lg font-medium bg-blue-700 hover:bg-blue-600 text-white transition-all"
+          >
+            Что такое RSA?
+          </button>
+
+          <!-- Модальное окно введения -->
+          <div v-if="showIntroduction" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
+            <div class="bg-gray-800 rounded-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto p-6 relative">
+              <button @click="showIntroduction = false" class="absolute top-4 right-4 p-2 rounded-full bg-gray-700 hover:bg-gray-600">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+              <RSAIntroduction />
+            </div>
           </div>
 
           <form @submit.prevent="handleGenerate" class="mb-8 p-6 rounded-xl bg-gray-800 border border-gray-700 shadow-md transition-all">
@@ -110,11 +130,16 @@
         <transition name="visualization">
           <div 
             v-if="showVisualization && visualizationSteps.length"
-            class="w-full lg:w-1/2 transition-all duration-500"
+            class="w-full lg:w-1/2 transition-all duration-500 space-y-6"
           >
             <RSAVisualizer 
               :steps="visualizationSteps"
               :animation-speed="animationSpeed"
+              @step-changed="onStepChanged"
+            />
+            <RSAExplanationPanel 
+              :step-name="currentStepName" 
+              :key-size="keySize"
             />
           </div>
         </transition>
@@ -129,27 +154,30 @@ import { useRouter } from 'vue-router';
 import RSAVisualizer from '../components/RSAVisualizer.vue';
 import { useRSAStore } from '../store/rsa';
 import { RSAVisualizer as RsaViz } from '../utils/rsa_visualization';
+import RSAIntroduction from '../components/RSAIntroduction.vue';
+import RSAExplanationPanel from '../components/RSAExplanationPanel.vue';
 
 const rsaStore = useRSAStore();
 const router = useRouter();
 
 const keySize = ref(2048);
 const showVisualization = ref(false);
+const showIntroduction = ref(false);
 const animationSpeed = ref(1000);
 const visualizationSteps = ref([]);
 const isGenerating = ref(false);
+const currentStepName = ref('');
 
 const handleGenerate = async () => {
   try {
     isGenerating.value = true;
     showVisualization.value = false;
     visualizationSteps.value = [];
+    currentStepName.value = '';
     
-    // Генерация реальных ключей
     const success = await rsaStore.generateKeys(keySize.value);
     
     if (success) {
-      // Создание визуализации
       const viz = new RsaViz(keySize.value);
       visualizationSteps.value = await viz.visualize();
     }
@@ -157,6 +185,12 @@ const handleGenerate = async () => {
     console.error('Ошибка генерации:', error);
   } finally {
     isGenerating.value = false;
+  }
+};
+
+const onStepChanged = (index) => {
+  if (visualizationSteps.value[index]) {
+    currentStepName.value = visualizationSteps.value[index].title;
   }
 };
 

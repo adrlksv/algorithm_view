@@ -9,7 +9,7 @@ from app.crypto.algorithms.aes.service import AesService
 
 from app.repository.crypto.example_repository import ExampleRepository
 from app.repository.crypto.key_repository import KeyRepository
-from db.users.models import User
+from app.db.users.models import User
 
 
 router = APIRouter(prefix="/aes", tags=["AES"])
