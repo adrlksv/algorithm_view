@@ -24,6 +24,30 @@
             <p class="text-lg text-green-300">Визуализация процесса шифрования</p>
           </div>
 
+          <!-- Кнопка для показа введения -->
+          <button
+            @click="showIntroduction = true"
+            class="w-full mb-6 py-3 px-6 rounded-lg font-medium bg-blue-700 hover:bg-blue-600 text-white transition-all"
+          >
+            Что такое AES?
+          </button>
+
+          <!-- Модальное окно с введением -->
+          <div v-if="showIntroduction" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
+            <div class="bg-gray-800 rounded-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto p-6 relative">
+              <button
+                @click="showIntroduction = false"
+                class="absolute top-4 right-4 p-2 rounded-full bg-gray-700 hover:bg-gray-600 text-gray-300 transition-colors"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+              <AESIntroduction />
+            </div>
+          </div>
+
+          <!-- Форма генерации ключа -->
           <form @submit.prevent="onGenerate" class="mb-8 p-6 rounded-xl bg-gray-800 border border-gray-700 shadow-md transition-all">
             <div class="mb-4">
               <label for="keySize" class="block mb-2 font-medium text-gray-300">Размер ключа (бит):</label>
@@ -127,17 +151,20 @@
           </div>
         </div>
 
-        <!-- Панель визуализации -->
+        <!-- Панель визуализации и пояснений -->
         <transition name="visualization">
           <div 
             v-if="showVisualization && visualizationSteps.length"
-            class="w-full lg:w-1/2 transition-all duration-500"
+            class="w-full lg:w-1/2 transition-all duration-500 space-y-6"
           >
             <AESVisualizer 
               :steps="visualizationSteps"
               :animation-speed="animationSpeed"
               @step-changed="onStepChanged"
             />
+            
+            <!-- Панель пояснений -->
+            <AESExplanationPanel :step-name="currentStepName" />
           </div>
         </transition>
       </div>
@@ -146,9 +173,11 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import AESVisualizer from '../components/AESVisualizer.vue';
+import AESExplanationPanel from '../components/AESExplanationPanel.vue';
+import AESIntroduction from '../components/AESIntroduction.vue';
 import { useAESStore } from '../store/aes';
 import { storeToRefs } from 'pinia';
 import { AESVisualizer as AesViz } from '../utils/aes_visualization';
@@ -162,6 +191,8 @@ const realResults = ref({});
 const visualizationSteps = ref([]);
 const showVisualization = ref(false);
 const animationSpeed = ref(1000);
+const showIntroduction = ref(false);
+const currentStepName = ref('');
 
 const router = useRouter();
 
@@ -169,6 +200,7 @@ const onGenerate = async () => {
   realResults.value = {};
   visualizationSteps.value = [];
   showVisualization.value = false;
+  currentStepName.value = '';
   
   try {
     await aes.generateAES(keySize.value, sampleText.value);
@@ -186,7 +218,9 @@ const onGenerate = async () => {
 };
 
 const onStepChanged = (index) => {
-  // Можно добавить дополнительную логику при изменении шага
+  if (visualizationSteps.value[index]) {
+    currentStepName.value = visualizationSteps.value[index].title;
+  }
 };
 
 const goHome = () => {
