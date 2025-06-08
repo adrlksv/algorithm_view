@@ -5,6 +5,7 @@ import Home from '../views/Home.vue';
 import { useAuthStore } from '../store/auth';
 import AESView from '../views/AESView.vue';
 import RSAView from '../views/RSAView.vue';
+import ECCView from '../views/ECCView.vue';
 
 const routes = [
   { path: '/', name: 'Home', component: Home, meta: { requiresAuth: true } },
@@ -12,6 +13,7 @@ const routes = [
   { path: '/register', name: 'Register', component: Register },
   { path: '/aes', component: AESView },
   { path: '/rsa', component: RSAView, meta: { requiresAuth: true } },
+  { path: '/ecc', component: ECCView, meta: { requiresAuth: true } },
 
 ];
 

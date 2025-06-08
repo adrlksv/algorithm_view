@@ -17,6 +17,13 @@
         >
           Перейти к RSA
         </button>
+
+        <button 
+          @click="goToECC"
+          class="px-6 py-3 rounded-lg font-medium bg-purple-700 hover:bg-purple-600 text-white transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500"
+        >
+          Перейти к ECC
+        </button>
         
         <button 
           @click="handleLogout"
@@ -47,5 +54,9 @@ const goToAES = () => {
 
 const goToRSA = () => {
   router.push('/rsa');
+};
+
+const goToECC = () => {
+  router.push('/ecc');
 };
 </script>

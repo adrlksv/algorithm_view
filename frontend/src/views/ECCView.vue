@@ -12,7 +12,7 @@
     <div class="container mx-auto">
       <div class="flex flex-col lg:flex-row gap-8 transition-all duration-500" :class="{'lg:items-start': showVisualization}">
         <!-- Форма и результаты -->
-        <div
+        <div 
           class="w-full transition-all duration-500 mx-auto"
           :class="{
             'lg:w-1/2': showVisualization,
@@ -21,7 +21,7 @@
         >
           <div class="text-center mb-10">
             <h1 class="text-4xl md:text-5xl font-bold mb-4 text-green-400">ECC Алгоритм</h1>
-            <p class="text-lg text-green-300">Визуализация процесса шифрования</p>
+            <p class="text-lg text-green-300">Визуализация эллиптической криптографии</p>
           </div>
 
           <!-- Кнопка для показа введения -->
@@ -47,32 +47,20 @@
             </div>
           </div>
 
-          <!-- Форма генерации ключа -->
+          <!-- Форма генерации ключей -->
           <form @submit.prevent="onGenerate" class="mb-8 p-6 rounded-xl bg-gray-800 border border-gray-700 shadow-md transition-all">
             <div class="mb-4">
-              <label for="curveType" class="block mb-2 font-medium text-gray-300">Выберите кривую:</label>
+              <label for="curveName" class="block mb-2 font-medium text-gray-300">Кривая:</label>
               <select
-                id="curveType"
-                v-model="curveType"
+                id="curveName"
+                v-model="curveName"
                 class="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-900 text-gray-300 transition-all"
                 required
               >
-                <option value="secp256k1">secp256k1</option>
-                <option value="prime256v1">prime256v1</option>
-                <option value="secp384r1">secp384r1</option>
+                <option value="secp256r1">secp256r1 (P-256)</option>
+                <option value="secp384r1">secp384r1 (P-384)</option>
+                <option value="secp521r1">secp521r1 (P-521)</option>
               </select>
-            </div>
-
-            <div class="mb-6">
-              <label for="sampleText" class="block mb-2 font-medium text-gray-300">Текст для шифрования:</label>
-              <textarea
-                id="sampleText"
-                v-model="sampleText"
-                placeholder="Введите текст для шифрования"
-                rows="3"
-                class="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-900 text-gray-300 transition-all"
-                required
-              ></textarea>
             </div>
 
             <button
@@ -87,7 +75,7 @@
                 </svg>
                 Генерация...
               </span>
-              <span v-else>Сгенерировать ECC ключ</span>
+              <span v-else>Сгенерировать ECC ключи</span>
             </button>
           </form>
 
@@ -107,23 +95,31 @@
                   {{ realResults.publicKey }}
                 </div>
               </div>
-              <div v-if="realResults.encrypted">
-                <h3 class="font-semibold mb-1 text-gray-300">Зашифрованный текст:</h3>
-                <div class="p-3 rounded-lg bg-gray-700 text-green-300 overflow-x-auto text-sm font-mono">
-                  {{ realResults.encrypted }}
-                </div>
-              </div>
             </div>
 
             <!-- Управление визуализацией -->
             <div class="space-y-4">
               <button
-                v-if="!showVisualization && visualizationSteps.length"
-                @click="showVisualization = true"
+                v-if="!visualizationReady && !visualizationLoading"
+                @click="startVisualization"
                 class="w-full py-3 px-6 rounded-lg font-medium bg-purple-700 hover:bg-purple-600 text-white transition-all"
               >
                 Показать визуализацию
               </button>
+
+
+              <div v-if="visualizationLoading" class="text-center py-4">
+                <div class="flex items-center justify-center gap-2 text-green-400">
+                  <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Загрузка визуализации...
+                </div>
+                <div class="mt-2 text-sm text-gray-400">
+                  Генерация шагов анимации ({{ visualizationProgress }}%)
+                </div>
+              </div>
 
               <div v-if="showVisualization" class="space-y-4">
                 <div>
@@ -153,18 +149,22 @@
 
         <!-- Панель визуализации и пояснений -->
         <transition name="visualization">
-          <div
+          <div 
             v-if="showVisualization && visualizationSteps.length"
             class="w-full lg:w-1/2 transition-all duration-500 space-y-6"
           >
-            <ECCVisualizer
+            <ECCVisualizer 
               :steps="visualizationSteps"
               :animation-speed="animationSpeed"
+              :curve-params="curveParams"
               @step-changed="onStepChanged"
             />
-
+            
             <!-- Панель пояснений -->
-            <ECCExplanationPanel :step-name="currentStepName" />
+            <ECCExplanationPanel 
+              :step-name="currentStepName" 
+              :curve-name="curveName" 
+            />
           </div>
         </transition>
       </div>
@@ -175,47 +175,86 @@
 <script setup>
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-
 import ECCVisualizer from '../components/ECCVisualizer.vue';
 import ECCExplanationPanel from '../components/ECCExplanationPanel.vue';
 import ECCIntroduction from '../components/ECCIntroduction.vue';
-
 import { useECCStore } from '../store/ecc';
-import { storeToRefs } from 'pinia';
 import { ECCVisualizer as EccViz } from '../utils/ecc_visualization';
+import { storeToRefs } from 'pinia';
 
-const ecc = useECCStore();
-const { loading } = storeToRefs(ecc);
+const eccStore = useECCStore();
+const { loading } = storeToRefs(eccStore);
 
-const curveType = ref('secp256k1');
-const sampleText = ref("Пример текста для шифрования ECC");
+const curveName = ref('secp256r1');
 const realResults = ref({});
 const visualizationSteps = ref([]);
 const showVisualization = ref(false);
 const animationSpeed = ref(1000);
 const showIntroduction = ref(false);
 const currentStepName = ref('');
+const curveParams = ref({});
+const visualizationReady = ref(false);
 
 const router = useRouter();
 
 const onGenerate = async () => {
+  // Сброс состояния
   realResults.value = {};
   visualizationSteps.value = [];
   showVisualization.value = false;
+  visualizationLoading.value = false;
   currentStepName.value = '';
 
   try {
-    await ecc.generateECC(curveType.value, sampleText.value);
+    console.log('Начало генерации ключей ECC...');
+    
+    // 1. Генерация реальных ключей
+    const success = await eccStore.generateKeys(curveName.value);
+    
+    if (!success) {
+      console.error('Генерация ключей ECC не удалась');
+      return;
+    }
+    
     realResults.value = {
-      privateKey: ecc.privateKey,
-      publicKey: ecc.publicKey,
-      encrypted: ecc.encrypted
+      privateKey: eccStore.privateKey,
+      publicKey: eccStore.publicKey
     };
-
-    const viz = new EccViz(curveType.value, sampleText.value);
-    visualizationSteps.value = await viz.visualize();
+    
   } catch (error) {
     console.error('Ошибка при генерации ECC:', error);
+  }
+};
+
+const visualizationLoading = ref(false);
+const visualizationProgress = ref(0);
+
+const startVisualization = async () => {
+  visualizationLoading.value = true;
+  visualizationProgress.value = 0;
+  
+  try {
+    console.log('Создание визуализации...');
+    const viz = new EccViz(curveName.value);
+    
+    // Добавляем колбек для отслеживания прогресса
+    const visualizationResult = await viz.visualize((progress) => {
+      visualizationProgress.value = Math.floor(progress * 100);
+    });
+    
+    if (!visualizationResult || !visualizationResult.steps) {
+      console.error('Ошибка создания визуализации: нет шагов');
+      return;
+    }
+    
+    visualizationSteps.value = visualizationResult.steps;
+    curveParams.value = visualizationResult.curveParams;
+    showVisualization.value = true;
+    
+  } catch (error) {
+    console.error('Ошибка при создании визуализации:', error);
+  } finally {
+    visualizationLoading.value = false;
   }
 };
 
