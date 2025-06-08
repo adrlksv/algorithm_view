@@ -12,7 +12,7 @@
     <div class="container mx-auto">
       <div class="flex flex-col lg:flex-row gap-8 transition-all duration-500" :class="{'lg:items-start': showVisualization}">
         <!-- Форма и результаты -->
-        <div
+        <div 
           class="w-full transition-all duration-500 mx-auto"
           :class="{
             'lg:w-1/2': showVisualization,
@@ -20,7 +20,7 @@
           }"
         >
           <div class="text-center mb-10">
-            <h1 class="text-4xl md:text-5xl font-bold mb-4 text-green-400">ECC Алгоритм</h1>
+            <h1 class="text-4xl md:text-5xl font-bold mb-4 text-green-400">AES Алгоритм</h1>
             <p class="text-lg text-green-300">Визуализация процесса шифрования</p>
           </div>
 
@@ -29,7 +29,7 @@
             @click="showIntroduction = true"
             class="w-full mb-6 py-3 px-6 rounded-lg font-medium bg-blue-700 hover:bg-blue-600 text-white transition-all"
           >
-            Что такое ECC?
+            Что такое AES?
           </button>
 
           <!-- Модальное окно с введением -->
@@ -43,23 +43,23 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
-              <ECCIntroduction />
+              <AESIntroduction />
             </div>
           </div>
 
           <!-- Форма генерации ключа -->
           <form @submit.prevent="onGenerate" class="mb-8 p-6 rounded-xl bg-gray-800 border border-gray-700 shadow-md transition-all">
             <div class="mb-4">
-              <label for="curveType" class="block mb-2 font-medium text-gray-300">Выберите кривую:</label>
+              <label for="keySize" class="block mb-2 font-medium text-gray-300">Размер ключа (бит):</label>
               <select
-                id="curveType"
-                v-model="curveType"
+                id="keySize"
+                v-model.number="keySize"
                 class="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-900 text-gray-300 transition-all"
                 required
               >
-                <option value="secp256k1">secp256k1</option>
-                <option value="prime256v1">prime256v1</option>
-                <option value="secp384r1">secp384r1</option>
+                <option value="128">128 бит</option>
+                <option value="192">192 бит</option>
+                <option value="256">256 бит</option>
               </select>
             </div>
 
@@ -87,27 +87,27 @@
                 </svg>
                 Генерация...
               </span>
-              <span v-else>Сгенерировать ECC ключ</span>
+              <span v-else>Сгенерировать AES ключ</span>
             </button>
           </form>
 
           <!-- Результаты -->
-          <div v-if="realResults.privateKey" class="p-6 rounded-xl bg-gray-800 border border-gray-700 shadow-md transition-all">
+          <div v-if="realResults.key" class="p-6 rounded-xl bg-gray-800 border border-gray-700 shadow-md transition-all">
             <h2 class="text-2xl font-bold mb-4 pb-2 border-b border-gray-700 text-green-400">Результаты</h2>
             <div class="space-y-4 mb-6">
               <div>
-                <h3 class="font-semibold mb-1 text-gray-300">Закрытый ключ:</h3>
+                <h3 class="font-semibold mb-1 text-gray-300">Ключ:</h3>
                 <div class="p-3 rounded-lg bg-gray-700 text-green-300 overflow-x-auto text-sm font-mono">
-                  {{ realResults.privateKey }}
+                  {{ realResults.key }}
                 </div>
               </div>
               <div>
-                <h3 class="font-semibold mb-1 text-gray-300">Открытый ключ:</h3>
+                <h3 class="font-semibold mb-1 text-gray-300">IV:</h3>
                 <div class="p-3 rounded-lg bg-gray-700 text-green-300 overflow-x-auto text-sm font-mono">
-                  {{ realResults.publicKey }}
+                  {{ realResults.iv }}
                 </div>
               </div>
-              <div v-if="realResults.encrypted">
+              <div>
                 <h3 class="font-semibold mb-1 text-gray-300">Зашифрованный текст:</h3>
                 <div class="p-3 rounded-lg bg-gray-700 text-green-300 overflow-x-auto text-sm font-mono">
                   {{ realResults.encrypted }}
@@ -153,18 +153,18 @@
 
         <!-- Панель визуализации и пояснений -->
         <transition name="visualization">
-          <div
+          <div 
             v-if="showVisualization && visualizationSteps.length"
             class="w-full lg:w-1/2 transition-all duration-500 space-y-6"
           >
-            <ECCVisualizer
+            <AESVisualizer 
               :steps="visualizationSteps"
               :animation-speed="animationSpeed"
               @step-changed="onStepChanged"
             />
-
+            
             <!-- Панель пояснений -->
-            <ECCExplanationPanel :step-name="currentStepName" />
+            <AESExplanationPanel :step-name="currentStepName" />
           </div>
         </transition>
       </div>
@@ -173,22 +173,20 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
-
-import ECCVisualizer from '../components/ECCVisualizer.vue';
-import ECCExplanationPanel from '../components/ECCExplanationPanel.vue';
-import ECCIntroduction from '../components/ECCIntroduction.vue';
-
-import { useECCStore } from '../store/ecc';
+import AESVisualizer from '../components/AESVisualizer.vue';
+import AESExplanationPanel from '../components/AESExplanationPanel.vue';
+import AESIntroduction from '../components/AESIntroduction.vue';
+import { useAESStore } from '../store/aes';
 import { storeToRefs } from 'pinia';
-import { ECCVisualizer as EccViz } from '../utils/ecc_visualization';
+import { AESVisualizer as AesViz } from '../utils/aes_visualization';
 
-const ecc = useECCStore();
-const { loading } = storeToRefs(ecc);
+const aes = useAESStore();
+const { steps, loading } = storeToRefs(aes);
 
-const curveType = ref('secp256k1');
-const sampleText = ref("Пример текста для шифрования ECC");
+const keySize = ref(256);
+const sampleText = ref("Пример текста для шифрования AES");
 const realResults = ref({});
 const visualizationSteps = ref([]);
 const showVisualization = ref(false);
@@ -203,19 +201,19 @@ const onGenerate = async () => {
   visualizationSteps.value = [];
   showVisualization.value = false;
   currentStepName.value = '';
-
+  
   try {
-    await ecc.generateECC(curveType.value, sampleText.value);
+    await aes.generateAES(keySize.value, sampleText.value);
     realResults.value = {
-      privateKey: ecc.privateKey,
-      publicKey: ecc.publicKey,
-      encrypted: ecc.encrypted
+      key: aes.key,
+      iv: aes.iv,
+      encrypted: aes.encrypted
     };
-
-    const viz = new EccViz(curveType.value, sampleText.value);
+    
+    const viz = new AesViz(keySize.value, sampleText.value);
     visualizationSteps.value = await viz.visualize();
   } catch (error) {
-    console.error('Ошибка при генерации ECC:', error);
+    console.error('Ошибка при генерации AES:', error);
   }
 };
 
