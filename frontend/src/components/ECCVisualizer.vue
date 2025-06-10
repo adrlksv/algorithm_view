@@ -30,7 +30,6 @@
       </div>
     </div>
 
-    <!-- Визуализация эллиптической кривой с контролами масштабирования -->
     <div class="mb-6 bg-gray-800 rounded-lg relative overflow-hidden">
       <div class="absolute top-2 right-2 z-10 flex gap-2">
         <button @click="zoomIn" class="p-1 rounded bg-gray-700 hover:bg-gray-600 text-gray-300">
@@ -61,7 +60,6 @@
       ></canvas>
     </div>
 
-    <!-- Математические операции -->
     <div class="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
       <div v-for="(op, idx) in currentOperations" :key="idx"
            class="p-4 rounded-lg bg-gray-800 border border-gray-700">
@@ -71,7 +69,6 @@
       </div>
     </div>
 
-    <!-- Прогресс -->
     <div class="mb-6">
       <div class="flex justify-between text-sm text-green-300 mb-1">
         <span>Прогресс</span>
@@ -83,7 +80,6 @@
       </div>
     </div>
 
-    <!-- Описание шага -->
     <div class="space-y-4">
       <transition name="fade-slide" mode="out-in">
         <div :key="`step-${currentStepIndex}`"
@@ -174,7 +170,6 @@ const playPause = () => {
   }
 };
 
-// Оптимизированные методы для работы с графиком
 const drawCurve = () => {
   const canvas = curveCanvas.value;
   if (!canvas) return;
@@ -183,33 +178,36 @@ const drawCurve = () => {
   const width = canvas.width;
   const height = canvas.height;
   
-  // Очистка canvas с учетом прозрачности
   ctx.clearRect(0, 0, width, height);
   
   // Центр с учетом смещения
   const centerX = width / 2 + offsetX.value;
   const centerY = height / 2 + offsetY.value;
   
-  // Адаптивный шаг сетки в зависимости от масштаба
+  // Адаптивный шаг сетки
   const gridStep = calculateGridStep();
   
-  // Оптимизированное рисование сетки
+  // Рисование сетки
   drawGrid(ctx, width, height, centerX, centerY, gridStep);
   
   // Рисование осей
   drawAxes(ctx, width, height, centerX, centerY);
   
-  // Рисование кривой с учетом реальных параметров
+  // Рисование кривой
   drawEllipticCurve(ctx, centerX, centerY);
   
-  // Рисование точек и операций
-  drawPointsAndOperations(ctx, centerX, centerY);
+  // Рисование операций (сначала линии)
+  if (currentStep.value.operation) {
+    drawOperation(ctx, centerX, centerY);
+  }
+  
+  // Рисование точек (поверх линий)
+  drawPoints(ctx, centerX, centerY);
 };
 
 const calculateGridStep = () => {
-  // Адаптивный шаг сетки (0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, ...)
   const steps = [0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, 100];
-  const targetStep = 50 / scale.value; // Желаемое расстояние в пикселях
+  const targetStep = 50 / scale.value;
   return steps.reduce((prev, curr) => 
     Math.abs(curr - targetStep) < Math.abs(prev - targetStep) ? curr : prev
   );
@@ -217,7 +215,7 @@ const calculateGridStep = () => {
 
 const drawGrid = (ctx, width, height, centerX, centerY, gridStep) => {
   ctx.strokeStyle = '#374151';
-  ctx.lineWidth = Math.min(1, 0.5 * Math.sqrt(scale.value / 30)); // Адаптивная толщина
+  ctx.lineWidth = Math.min(1, 0.5 * Math.sqrt(scale.value / 30));
   
   // Вертикальные линии
   const startX = Math.floor((-centerX / scale.value) / gridStep) * gridStep;
@@ -250,7 +248,7 @@ const drawGrid = (ctx, width, height, centerX, centerY, gridStep) => {
 
 const drawAxes = (ctx, width, height, centerX, centerY) => {
   ctx.strokeStyle = '#6b7280';
-  ctx.lineWidth = Math.min(2, 1.5 * Math.sqrt(scale.value / 30)); // Адаптивная толщина
+  ctx.lineWidth = Math.min(2, 1.5 * Math.sqrt(scale.value / 30));
   
   // Ось X
   if (centerY >= 0 && centerY <= height) {
@@ -271,22 +269,22 @@ const drawAxes = (ctx, width, height, centerX, centerY) => {
 
 const drawEllipticCurve = (ctx, centerX, centerY) => {
   const { a, b, p } = props.curveParams;
-  const isSimplified = p === 17; // Для демонстрационных целей
+  const isSimplified = p === 17;
   
   ctx.strokeStyle = '#4ade80';
-  ctx.lineWidth = Math.min(3, 2 * Math.sqrt(scale.value / 30)); // Адаптивная толщина
-  ctx.beginPath();
+  ctx.lineWidth = Math.min(3, 2 * Math.sqrt(scale.value / 30));
   
-  // Определяем область видимости
+  // Верхняя часть кривой
+  ctx.beginPath();
+  let firstPoint = true;
+  
   const visibleWidth = curveCanvas.value.width / scale.value;
   const startX = -visibleWidth / 2;
   const endX = visibleWidth / 2;
-  const step = Math.max(0.01, visibleWidth / 200); // Количество точек для расчета
+  const step = Math.max(0.01, visibleWidth / 200);
   
-  // Рисуем кривую
-  let firstPoint = true;
   for (let x = startX; x <= endX; x += step) {
-    const xVal = isSimplified ? x : (x % p + p) % p; // Для реальных кривых учитываем модуль
+    const xVal = isSimplified ? x : (x % p + p) % p;
     const ySquared = isSimplified ? 
       Math.pow(xVal, 3) + a * xVal + b :
       (Math.pow(xVal, 3) + a * xVal + b) % p;
@@ -294,67 +292,47 @@ const drawEllipticCurve = (ctx, centerX, centerY) => {
     if (ySquared >= 0) {
       const y = Math.sqrt(ySquared);
       const canvasX = centerX + x * scale.value;
+      const canvasY = centerY - y * scale.value;
       
-      // Верхняя часть кривой
-      const canvasYUpper = centerY - y * scale.value;
       if (firstPoint) {
-        ctx.moveTo(canvasX, canvasYUpper);
+        ctx.moveTo(canvasX, canvasY);
         firstPoint = false;
       } else {
-        ctx.lineTo(canvasX, canvasYUpper);
-      }
-      
-      // Нижняя часть кривой
-      const canvasYLower = centerY + y * scale.value;
-      if (firstPoint) {
-        ctx.moveTo(canvasX, canvasYLower);
-        firstPoint = false;
-      } else {
-        ctx.lineTo(canvasX, canvasYLower);
+        ctx.lineTo(canvasX, canvasY);
       }
     }
   }
+  ctx.stroke();
   
+  // Нижняя часть кривой
+  ctx.beginPath();
+  firstPoint = true;
+  
+  for (let x = startX; x <= endX; x += step) {
+    const xVal = isSimplified ? x : (x % p + p) % p;
+    const ySquared = isSimplified ? 
+      Math.pow(xVal, 3) + a * xVal + b :
+      (Math.pow(xVal, 3) + a * xVal + b) % p;
+    
+    if (ySquared >= 0) {
+      const y = Math.sqrt(ySquared);
+      const canvasX = centerX + x * scale.value;
+      const canvasY = centerY + y * scale.value;
+      
+      if (firstPoint) {
+        ctx.moveTo(canvasX, canvasY);
+        firstPoint = false;
+      } else {
+        ctx.lineTo(canvasX, canvasY);
+      }
+    }
+  }
   ctx.stroke();
 };
 
-const drawPointsAndOperations = (ctx, centerX, centerY) => {
-  if (!currentStep.value.points) return;
-  
-  // Рисуем точки
-  currentStep.value.points.forEach(point => {
-    if (!point.visible && point.visible !== undefined) return;
-    
-    const canvasX = centerX + point.x * scale.value;
-    const canvasY = centerY - point.y * scale.value;
-    
-    // Проверяем, видна ли точка в текущем масштабе
-    if (canvasX < 0 || canvasX > curveCanvas.value.width || 
-        canvasY < 0 || canvasY > curveCanvas.value.height) {
-      return;
-    }
-    
-    ctx.fillStyle = point.color || '#f87171';
-    ctx.beginPath();
-    ctx.arc(canvasX, canvasY, 6 * Math.sqrt(scale.value / 30), 0, Math.PI * 2); // Адаптивный размер
-    ctx.fill();
-    
-    if (point.label) {
-      ctx.fillStyle = '#e2e8f0';
-      ctx.font = `${12 * Math.sqrt(scale.value / 30)}px Arial`; // Адаптивный размер шрифта
-      ctx.fillText(point.label, canvasX + 10, canvasY + 5);
-    }
-  });
-  
-  // Рисуем операции (сложение/удвоение)
-  drawOperation(ctx, centerX, centerY);
-};
-
 const drawOperation = (ctx, centerX, centerY) => {
-  if (!currentStep.value.operation) return;
-  
   ctx.setLineDash([5, 3]);
-  ctx.lineWidth = Math.min(2, 1.5 * Math.sqrt(scale.value / 30)); // Адаптивная толщина
+  ctx.lineWidth = Math.min(2, 1.5 * Math.sqrt(scale.value / 30));
   
   switch (currentStep.value.operation) {
     case 'add':
@@ -362,22 +340,45 @@ const drawOperation = (ctx, centerX, centerY) => {
         const p1 = currentStep.value.points[0];
         const p2 = currentStep.value.points[1];
         
+        // Линия между точками
         ctx.strokeStyle = '#93c5fd';
         ctx.beginPath();
         ctx.moveTo(centerX + p1.x * scale.value, centerY - p1.y * scale.value);
         ctx.lineTo(centerX + p2.x * scale.value, centerY - p2.y * scale.value);
         ctx.stroke();
+        
+        // Пунктирная линия до результата
+        if (currentStep.value.points.length > 2) {
+          const result = currentStep.value.points[2];
+          ctx.strokeStyle = '#4ade80';
+          ctx.beginPath();
+          ctx.moveTo(centerX + p2.x * scale.value, centerY - p2.y * scale.value);
+          ctx.lineTo(centerX + result.x * scale.value, centerY - result.y * scale.value);
+          ctx.stroke();
+        }
       }
       break;
       
     case 'double':
       if (currentStep.value.points?.length >= 1) {
         const p = currentStep.value.points[0];
+        
+        // Касательная
         ctx.strokeStyle = '#f59e0b';
         ctx.beginPath();
         ctx.moveTo(centerX + (p.x - 1) * scale.value, centerY - (p.y - 1) * scale.value);
         ctx.lineTo(centerX + (p.x + 1) * scale.value, centerY - (p.y + 1) * scale.value);
         ctx.stroke();
+        
+        // Пунктирная линия до результата
+        if (currentStep.value.points.length > 1) {
+          const result = currentStep.value.points[1];
+          ctx.strokeStyle = '#4ade80';
+          ctx.beginPath();
+          ctx.moveTo(centerX + p.x * scale.value, centerY - p.y * scale.value);
+          ctx.lineTo(centerX + result.x * scale.value, centerY - result.y * scale.value);
+          ctx.stroke();
+        }
       }
       break;
   }
@@ -385,14 +386,48 @@ const drawOperation = (ctx, centerX, centerY) => {
   ctx.setLineDash([]);
 };
 
-// Методы управления графиком
+const drawPoints = (ctx, centerX, centerY) => {
+  if (!currentStep.value.points) return;
+  
+  currentStep.value.points.forEach(point => {
+    if (!point.visible && point.visible !== undefined) return;
+    
+    const canvasX = centerX + point.x * scale.value;
+    const canvasY = centerY - point.y * scale.value;
+    
+    // Пропускаем точки за пределами видимости
+    if (canvasX < -50 || canvasX > curveCanvas.value.width + 50 || 
+        canvasY < -50 || canvasY > curveCanvas.value.height + 50) {
+      return;
+    }
+    
+    // Точка
+    ctx.fillStyle = point.color || '#f87171';
+    ctx.beginPath();
+    ctx.arc(canvasX, canvasY, 6, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Обводка точки
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    
+    // Подпись
+    if (point.label) {
+      ctx.fillStyle = '#e2e8f0';
+      ctx.font = `${12 * Math.sqrt(scale.value / 30)}px Arial`;
+      ctx.fillText(point.label, canvasX + 10, canvasY + 5);
+    }
+  });
+};
+
 const zoomIn = () => {
   scale.value = Math.min(scale.value * 1.2, 200);
   drawCurve();
 };
 
 const zoomOut = () => {
-  scale.value = Math.max(scale.value / 1.2, 5); // Минимальный масштаб 5
+  scale.value = Math.max(scale.value / 1.2, 5);
   drawCurve();
 };
 
@@ -432,9 +467,8 @@ const onWheel = (e) => {
   e.preventDefault();
   const delta = e.deltaY > 0 ? -1 : 1;
   const zoomFactor = delta > 0 ? 1.1 : 0.9;
-  const newScale = Math.max(5, Math.min(200, scale.value * zoomFactor)); // Ограничиваем масштаб
+  const newScale = Math.max(5, Math.min(200, scale.value * zoomFactor));
   
-  // Центрируем масштабирование на курсоре
   const mouseX = e.clientX - curveCanvas.value.getBoundingClientRect().left;
   const mouseY = e.clientY - curveCanvas.value.getBoundingClientRect().top;
   
