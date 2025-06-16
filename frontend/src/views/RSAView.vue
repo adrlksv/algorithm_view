@@ -1,4 +1,3 @@
-<!-- RSAView.vue -->
 <template>
   <div class="min-h-screen bg-gray-900 text-gray-100 p-6">
     <button
@@ -10,7 +9,6 @@
 
     <div class="container mx-auto">
       <div class="flex flex-col lg:flex-row gap-8 transition-all duration-500" :class="{'lg:items-start': showVisualization}">
-        <!-- Основное окно -->
         <div 
           class="w-full transition-all duration-500 mx-auto"
           :class="{
@@ -30,7 +28,6 @@
             Что такое RSA?
           </button>
 
-          <!-- Модальное окно введения -->
           <div v-if="showIntroduction" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
             <div class="bg-gray-800 rounded-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto p-6 relative">
               <button @click="showIntroduction = false" class="absolute top-4 right-4 p-2 rounded-full bg-gray-700 hover:bg-gray-600">
@@ -74,7 +71,6 @@
             </button>
           </form>
 
-          <!-- Результаты -->
           <div v-if="rsaStore.privateKey" class="p-6 rounded-xl bg-gray-800 border border-gray-700 shadow-md transition-all">
             <h2 class="text-2xl font-bold mb-4 pb-2 border-b border-gray-700 text-green-400">Результаты</h2>
             
@@ -126,7 +122,6 @@
           </div>
         </div>
 
-        <!-- Окно визуализации -->
         <transition name="visualization">
           <div 
             v-if="showVisualization && visualizationSteps.length"

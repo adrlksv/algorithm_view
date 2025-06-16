@@ -8,7 +8,6 @@ export class RSAVisualizer {
     this.steps = [];
     const isLargeKey = this.keySize > 1024;
 
-    // 1. Инициализация
     await this.addStep({
       title: 'Инициализация алгоритма RSA',
       content: `Генерация ключей размером ${this.keySize} бит`,
@@ -21,7 +20,6 @@ export class RSAVisualizer {
       ]
     });
 
-    // 2. Генерация простых чисел
     this.p = isLargeKey ? this.fakeLargePrime('p') : this.generatePrime(512);
     this.q = isLargeKey ? this.fakeLargePrime('q') : this.generatePrime(512);
     
@@ -37,7 +35,6 @@ export class RSAVisualizer {
       ]
     });
 
-    // 3. Вычисление модуля
     this.n = this.p * this.q;
     await this.addStep({
       title: 'Вычисление модуля n',
@@ -48,7 +45,6 @@ export class RSAVisualizer {
       ]
     });
 
-    // 4. Функция Эйлера
     this.phi = (this.p - 1n) * (this.q - 1n);
     await this.addStep({
       title: 'Функция Эйлера φ(n)',
@@ -59,7 +55,6 @@ export class RSAVisualizer {
       ]
     });
 
-    // 5. Открытая экспонента
     this.e = 65537n;
     await this.addStep({
       title: 'Открытая экспонента e',
@@ -71,7 +66,6 @@ export class RSAVisualizer {
       ]
     });
 
-    // 6. Секретная экспонента
     this.d = this.modInverse(this.e, this.phi);
     await this.addStep({
       title: 'Секретная экспонента d',
@@ -83,7 +77,6 @@ export class RSAVisualizer {
       ]
     });
 
-    // 7. Формирование ключей
     await this.addStep({
       title: 'Формирование ключей',
       content: 'Создание ключевой пары в PEM формате',
@@ -103,7 +96,6 @@ export class RSAVisualizer {
     return this.steps;
   }
 
-  // Вспомогательные методы
   fakeLargePrime(name) {
     const primes = {
       p: BigInt('0xFFFFFFFFFFFFFFFFC90FDAA22168C234C4C6628B80DC1CD129024E088A67CC74020BBEA63B139B22514A08798E3404DDEF9519B3CD3A431B302B0A6DF25F14374FE1356D6D51C245E485B576625E7EC6F44C42E9A637ED6B0BFF5CB6F406B7EDEE386BFB5A899FA5AE9F24117C4B1FE649286651ECE45B3DC2007CB8A163BF0598DA48361C55D39A69163FA8FD24CF5F83655D23DCA3AD961C62F356208552BB9ED529077096966D670C354E4ABC9804F1746C08CA23727FFFFFFFFFFFFFFFF'),
@@ -113,7 +105,6 @@ export class RSAVisualizer {
   }
 
   generatePrime(bits) {
-    // Упрощенная генерация простого числа для демонстрации
     const min = 1n << BigInt(bits - 1);
     const max = (1n << BigInt(bits)) - 1n;
     let candidate = min + (BigInt(Math.floor(Math.random() * 1000)) * 2n) + 1n;

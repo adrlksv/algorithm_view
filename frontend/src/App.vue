@@ -6,12 +6,12 @@
 </script>
 
 <style>
-/* Глобальные стили */
+
 body {
   @apply bg-gray-900 text-gray-100 font-sans antialiased;
 }
 
-/* Анимации для переходов между страницами */
+
 .page-enter-active,
 .page-leave-active {
   transition: all 0.3s ease;
@@ -22,7 +22,6 @@ body {
   transform: translateY(10px);
 }
 
-/* Стили для скроллбара */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;

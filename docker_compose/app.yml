@@ -7,48 +7,56 @@ services:
     ports:
       - "${DB_PORT}:5432"
     environment:
-      POSTGRE_HOST: db
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASS}
       POSTGRES_DB: ${DB_NAME}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
     networks:
       - alg_network
     volumes:
-      - pgdata:/var/lib/postgres/data
+      - pgdata:/var/lib/postgresql/data
 
-  main-app:
-    build:
-      context: ..
-      dockerfile: Dockerfile 
-    container_name: main-app
-    ports:
-      - "${API_PORT}:8000"
-    command: "uvicorn --factory api.main:create_app --reload --host 0.0.0.0 --port 8000"
-    env_file:
-      - ../.env
-    volumes:
-      - ../app/:/app/
-    depends_on:
-      - db 
-    networks:
-      - alg_network
-
-  alembic:
+  backend:
     build:
       context: ..
       dockerfile: Dockerfile
-    container_name: alembic_migration
+    container_name: main-app
+    ports:
+      - "${API_PORT}:8000"
+    env_file:
+      - ../.env
     depends_on:
-      - db
-    environment:
-      DB_NAME: ${DB_NAME}
-      DB_USER: ${DB_USER}
-      DB_PASS: ${DB_PASS}
-      DB_HOST: db
-      DB_PORT: ${DB_PORT}
+      db:
+        condition: service_healthy
     networks:
-      alg_network:
-    command: alembic upgrade head
+      - alg_network
+    command: uvicorn --factory app.api.main:create_app --host 0.0.0.0 --port 8000
+    volumes:
+      - ../app:/app
+      - ../migrations:/app/migrations
+
+  frontend:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      target: frontend
+    container_name: frontend-app
+    ports:
+      - "${FRONTEND_PORT}:3000"
+    volumes:
+      - ../frontend:/app/frontend
+      - /app/frontend/node_modules
+    environment:
+      - NODE_ENV=development
+    depends_on:
+      - backend
+    networks:
+      - alg_network
+    command: npm run dev
 
 networks:
   alg_network:

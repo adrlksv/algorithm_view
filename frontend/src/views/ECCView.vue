@@ -1,6 +1,5 @@
 <template>
   <div class="min-h-screen bg-gray-900 text-gray-100 p-6">
-    <!-- Кнопка "На главную" -->
     <button
       @click="goHome"
       class="absolute top-6 right-6 px-4 py-2 rounded-lg font-medium bg-green-700 hover:bg-green-600 text-white transition-colors focus:outline-none focus:ring-2 focus:ring-green-500"
@@ -8,10 +7,8 @@
       На главную
     </button>
 
-    <!-- Основной контент -->
     <div class="container mx-auto">
       <div class="flex flex-col lg:flex-row gap-8 transition-all duration-500" :class="{'lg:items-start': showVisualization}">
-        <!-- Форма и результаты -->
         <div 
           class="w-full transition-all duration-500 mx-auto"
           :class="{
@@ -24,7 +21,6 @@
             <p class="text-lg text-green-300">Визуализация эллиптической криптографии</p>
           </div>
 
-          <!-- Кнопка для показа введения -->
           <button
             @click="showIntroduction = true"
             class="w-full mb-6 py-3 px-6 rounded-lg font-medium bg-blue-700 hover:bg-blue-600 text-white transition-all"
@@ -32,7 +28,6 @@
             Что такое ECC?
           </button>
 
-          <!-- Модальное окно с введением -->
           <div v-if="showIntroduction" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
             <div class="bg-gray-800 rounded-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto p-6 relative">
               <button
@@ -47,7 +42,6 @@
             </div>
           </div>
 
-          <!-- Форма генерации ключей -->
           <form @submit.prevent="onGenerate" class="mb-8 p-6 rounded-xl bg-gray-800 border border-gray-700 shadow-md transition-all">
             <div class="mb-4">
               <label for="curveName" class="block mb-2 font-medium text-gray-300">Кривая:</label>
@@ -79,7 +73,6 @@
             </button>
           </form>
 
-          <!-- Результаты -->
           <div v-if="realResults.privateKey" class="p-6 rounded-xl bg-gray-800 border border-gray-700 shadow-md transition-all">
             <h2 class="text-2xl font-bold mb-4 pb-2 border-b border-gray-700 text-green-400">Результаты</h2>
             <div class="space-y-4 mb-6">
@@ -97,7 +90,6 @@
               </div>
             </div>
 
-            <!-- Управление визуализацией -->
             <div class="space-y-4">
               <button
                 v-if="!visualizationReady && !visualizationLoading"
@@ -147,7 +139,6 @@
           </div>
         </div>
 
-        <!-- Панель визуализации и пояснений -->
         <transition name="visualization">
           <div 
             v-if="showVisualization && visualizationSteps.length"
@@ -160,7 +151,6 @@
               @step-changed="onStepChanged"
             />
             
-            <!-- Панель пояснений -->
             <ECCExplanationPanel 
               :step-name="currentStepName" 
               :curve-name="curveName" 
@@ -198,7 +188,6 @@ const visualizationReady = ref(false);
 const router = useRouter();
 
 const onGenerate = async () => {
-  // Сброс состояния
   realResults.value = {};
   visualizationSteps.value = [];
   showVisualization.value = false;
@@ -208,7 +197,6 @@ const onGenerate = async () => {
   try {
     console.log('Начало генерации ключей ECC...');
     
-    // 1. Генерация реальных ключей
     const success = await eccStore.generateKeys(curveName.value);
     
     if (!success) {
@@ -237,7 +225,6 @@ const startVisualization = async () => {
     console.log('Создание визуализации...');
     const viz = new EccViz(curveName.value);
     
-    // Добавляем колбек для отслеживания прогресса
     const visualizationResult = await viz.visualize((progress) => {
       visualizationProgress.value = Math.floor(progress * 100);
     });
