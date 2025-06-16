@@ -1,5 +1,5 @@
 # Algorithm Visualization Tool
-(![alt text](image.png))
+![alt text](image.png)
 
 Интерактивная платформа для визуализации работы криптографических алгоритмов (AES, RSA, ECC) с пошаговыми объяснениями.
 
