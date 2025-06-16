@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from api.dependencies.auth_depends import get_current_user
+from app.api.dependencies.auth_depends import get_current_user
 from app.db.database import get_db
 
 from app.crypto.algorithms.aes.service import AesService

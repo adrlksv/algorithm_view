@@ -1,0 +1,36 @@
+Attaching to postgres-db, main-app, frontend-app
+[33mmain-app    |[0m Waiting for PostgreSQL to be ready...
+[33mmain-app    |[0m Attempt 1: PostgreSQL not ready, waiting...
+[32mpostgres-db |[0m 
+[32mpostgres-db |[0m PostgreSQL Database directory appears to contain a database; Skipping initialization
+[32mpostgres-db |[0m 
+[32mpostgres-db |[0m 2025-06-16 20:06:11.900 UTC [1] LOG:  starting PostgreSQL 17.5 (Debian 17.5-1.pgdg120+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14) 12.2.0, 64-bit
+[32mpostgres-db |[0m 2025-06-16 20:06:11.900 UTC [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432
+[32mpostgres-db |[0m 2025-06-16 20:06:11.901 UTC [1] LOG:  listening on IPv6 address "::", port 5432
+[32mpostgres-db |[0m 2025-06-16 20:06:11.903 UTC [1] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+[32mpostgres-db |[0m 2025-06-16 20:06:11.910 UTC [29] LOG:  database system was shut down at 2025-06-16 20:05:23 UTC
+[32mpostgres-db |[0m 2025-06-16 20:06:11.917 UTC [1] LOG:  database system is ready to accept connections
+[36mfrontend-app |[0m 
+[36mfrontend-app |[0m > vue-auth-frontend@1.0.0 dev
+[36mfrontend-app |[0m > vite
+[36mfrontend-app |[0m 
+[36mfrontend-app |[0m [33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+[36mfrontend-app |[0m 
+[36mfrontend-app |[0m   VITE v6.3.5  ready in 281 ms
+[36mfrontend-app |[0m 
+[36mfrontend-app |[0m   ➜  Local:   http://localhost:5173/
+[36mfrontend-app |[0m   ➜  Network: http://172.18.0.4:5173/
+[33mmain-app    |[0m INFO:     Started server process [1]
+[33mmain-app    |[0m INFO:     Waiting for application startup.
+[33mmain-app    |[0m INFO:     Application startup complete.
+[33mmain-app    |[0m INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+[33mmain-app    |[0m Attempt 2: PostgreSQL not ready, waiting...
+[33mmain-app    |[0m Attempt 3: PostgreSQL not ready, waiting...
+[33mmain-app    |[0m Attempt 4: PostgreSQL not ready, waiting...
+[33mmain-app    |[0m Attempt 5: PostgreSQL not ready, waiting...
+[33mmain-app    |[0m Attempt 6: PostgreSQL not ready, waiting...
+[33mmain-app    |[0m Attempt 7: PostgreSQL not ready, waiting...
+[33mmain-app    |[0m Attempt 8: PostgreSQL not ready, waiting...
+[33mmain-app    |[0m Attempt 9: PostgreSQL not ready, waiting...
+[33mmain-app    |[0m Attempt 10: PostgreSQL not ready, waiting...
+[33mmain-app    |[0m ERROR: Failed to connect to PostgreSQL after 10 attempts

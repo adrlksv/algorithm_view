@@ -5,20 +5,21 @@ services:
     image: postgres:17
     container_name: postgres-db
     ports:
-      - "${DB_PORT}:5432"
+      - "5432:5432"
     environment:
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASS}
-      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: crypto_key_db
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
       interval: 5s
       timeout: 5s
-      retries: 10
+      retries: 30
     networks:
       - alg_network
     volumes:
       - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
 
   backend:
     build:
@@ -26,7 +27,14 @@ services:
       dockerfile: Dockerfile
     container_name: main-app
     ports:
-      - "${API_PORT}:8000"
+      - "8000:8000"
+    environment:
+      - PYTHONPATH=/app
+      - DB_HOST=db
+      - DB_USER=postgres
+      - DB_PASS=postgres
+      - DB_NAME=crypto_key_db
+      - DB_PORT=5432
     env_file:
       - ../.env
     depends_on:
@@ -36,17 +44,18 @@ services:
       - alg_network
     command: uvicorn --factory app.api.main:create_app --host 0.0.0.0 --port 8000
     volumes:
-      - ../app:/app
+      - ../.env:/app/.env
+      - ../alembic.ini:/app/alembic.ini
       - ../migrations:/app/migrations
 
   frontend:
     build:
       context: ..
       dockerfile: Dockerfile
-      target: frontend
+      target: frontend-builder
     container_name: frontend-app
     ports:
-      - "${FRONTEND_PORT}:3000"
+      - "5173:5173"
     volumes:
       - ../frontend:/app/frontend
       - /app/frontend/node_modules

@@ -1,47 +1,47 @@
-FROM python:3.11.12-bullseye as backend
+FROM node:18 AS frontend-builder
 
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONUNBUFFERED 1
+WORKDIR /app/frontend
+COPY frontend/package.json frontend/package-lock.json ./
+RUN npm install
+COPY frontend .
+RUN npm run build
+
+FROM python:3.11.12-bullseye AS backend-builder
 
 WORKDIR /app
-
-RUN apt-get update -y && \
-    apt-get install -y python3-dev gcc musl-dev postgresql-client
-
-COPY pyproject.toml poetry.lock /app/
-
-RUN pip install --upgrade pip && \
-    pip install poetry && \
+COPY pyproject.toml poetry.lock ./
+RUN pip install poetry && \
     poetry config virtualenvs.create false && \
     poetry install --no-root --no-interaction --no-ansi
 
-COPY . .
+RUN apt-get update && apt-get install -y \
+    iputils-ping \
+    netcat \
+    postgresql-client \
+    && rm -rf /var/lib/apt/lists/*
 
-FROM node:18 as frontend
+COPY app ./app
+COPY migrations ./migrations
+COPY alembic.ini .
+COPY docker-entrypoint.sh .
+COPY .env .env
 
-WORKDIR /app/frontend
-
-COPY frontend/package.json frontend/package-lock.json ./
-
-RUN npm install
-
-COPY frontend .
-
-RUN npm run build
+ENV PYTHONPATH=/app
 
 FROM python:3.11.12-bullseye
 
 WORKDIR /app
 
-COPY --from=backend /app /app
+COPY --from=backend-builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+COPY --from=backend-builder /usr/local/bin /usr/local/bin
 
-COPY --from=frontend /app/dist /app/frontend/dist
+COPY --from=backend-builder /app /app
 
-RUN apt-get update -y && \
-    apt-get install -y postgresql-client && \
-    rm -rf /var/lib/apt/lists/*
+COPY --from=frontend-builder /app/frontend/dist /app/frontend/dist
 
-COPY docker-entrypoint.sh /docker-entrypoint.sh
+COPY --from=backend-builder /app/docker-entrypoint.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh
+
+RUN apt-get update && apt-get install -y postgresql-client && rm -rf /var/lib/apt/lists/*
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
