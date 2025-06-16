@@ -1,6 +1,6 @@
 # Algorithm Visualization Tool
 
-![Project Logo](https://www.flaticon.com/free-icon/algorithm_3195640)
+![Project Logo](![alt text](image.png))
 
 Интерактивная платформа для визуализации работы криптографических алгоритмов (AES, RSA, ECC) с пошаговыми объяснениями.
 
