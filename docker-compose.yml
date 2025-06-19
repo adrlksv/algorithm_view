@@ -1,6 +1,43 @@
 version: '3.9'
 
 services:
+  backend:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      DB_HOST: db
+      DB_USER: postgres
+      DB_PASS: postgres
+      DB_NAME: crypto_key_db
+      DB_PORT: "5432"
+    depends_on:
+      db:
+        condition: service_healthy
+    command: uvicorn --factory app.api.main:create_app --host 0.0.0.0 --port 8000
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  frontend:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      target: frontend-builder
+    ports:
+      - "3000:5173"
+    environment:
+      NODE_ENV: production
+      VITE_API_URL: http://backend:8000
+    command: npm run preview
+    depends_on:
+      backend:
+        condition: service_healthy
+
   db:
     image: postgres:17
     environment:
@@ -15,34 +52,3 @@ services:
       timeout: 5s
       retries: 30
     restart: unless-stopped
-
-  backend:
-    build:
-      context: ..
-      dockerfile: Dockerfile
-    ports:
-      - "8000:8000"
-    environment:
-      PYTHONPATH: /app
-      DB_HOST: db
-      DB_USER: postgres
-      DB_PASS: postgres
-      DB_NAME: crypto_key_db
-      DB_PORT: "5432"
-    depends_on:
-      db:
-        condition: service_healthy
-    command: uvicorn --factory app.api.main:create_app --host 0.0.0.0 --port 8000
-
-  frontend:
-    build:
-      context: ..
-      dockerfile: Dockerfile
-      target: frontend-builder
-    ports:
-      - "80:5173" 
-    environment:
-      NODE_ENV: production
-    depends_on:
-      - backend
-    command: npm run preview
