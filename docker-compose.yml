@@ -11,14 +11,12 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: crypto_key_db
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d crypto_key_db"] 
       interval: 5s
       timeout: 5s
       retries: 30
     networks:
       - alg_network
-    volumes:
-      - pgdata:/var/lib/postgresql/data
     restart: unless-stopped
 
   backend:
@@ -35,18 +33,12 @@ services:
       - DB_PASS=postgres
       - DB_NAME=crypto_key_db
       - DB_PORT=5432
-    env_file:
-      - ../.env
     depends_on:
       db:
         condition: service_healthy
     networks:
       - alg_network
     command: uvicorn --factory app.api.main:create_app --host 0.0.0.0 --port 8000
-    volumes:
-      - ../.env:/app/.env
-      - ../alembic.ini:/app/alembic.ini
-      - ../migrations:/app/migrations
 
   frontend:
     build:
@@ -56,20 +48,14 @@ services:
     container_name: frontend-app
     ports:
       - "5173:5173"
-    volumes:
-      - ../frontend:/app/frontend
-      - /app/frontend/node_modules
     environment:
-      - NODE_ENV=development
+      - NODE_ENV=production  
     depends_on:
       - backend
     networks:
       - alg_network
-    command: npm run dev
+    command: npm run preview 
 
 networks:
   alg_network:
     driver: bridge
-
-volumes:
-  pgdata:
