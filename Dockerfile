@@ -24,7 +24,6 @@ COPY app ./app
 COPY migrations ./migrations
 COPY alembic.ini .
 COPY docker-entrypoint.sh .
-COPY .env .env
 
 ENV PYTHONPATH=/app
 
