@@ -3,41 +3,35 @@ version: '3.9'
 services:
   db:
     image: postgres:17
-    container_name: postgres-db
-    ports:
-      - "5432:5432"
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: crypto_key_db
+    ports:
+      - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d crypto_key_db"] 
+      test: ["CMD-SHELL", "pg_isready -U postgres -d crypto_key_db"]
       interval: 5s
       timeout: 5s
       retries: 30
-    networks:
-      - alg_network
     restart: unless-stopped
 
   backend:
     build:
       context: ..
       dockerfile: Dockerfile
-    container_name: main-app
     ports:
       - "8000:8000"
     environment:
-      - PYTHONPATH=/app
-      - DB_HOST=db
-      - DB_USER=postgres
-      - DB_PASS=postgres
-      - DB_NAME=crypto_key_db
-      - DB_PORT=5432
+      PYTHONPATH: /app
+      DB_HOST: db
+      DB_USER: postgres
+      DB_PASS: postgres
+      DB_NAME: crypto_key_db
+      DB_PORT: "5432"
     depends_on:
       db:
         condition: service_healthy
-    networks:
-      - alg_network
     command: uvicorn --factory app.api.main:create_app --host 0.0.0.0 --port 8000
 
   frontend:
@@ -45,17 +39,10 @@ services:
       context: ..
       dockerfile: Dockerfile
       target: frontend-builder
-    container_name: frontend-app
     ports:
-      - "5173:5173"
+      - "80:5173" 
     environment:
-      - NODE_ENV=production  
+      NODE_ENV: production
     depends_on:
       - backend
-    networks:
-      - alg_network
-    command: npm run preview 
-
-networks:
-  alg_network:
-    driver: bridge
+    command: npm run preview
